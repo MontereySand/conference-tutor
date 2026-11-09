@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const corrections = correctionsForIntent(input.corrections, intent, input.requestKind);
     stage = "generate";
     const result = await withSpan("ct.generate", { lang: turnKey.lang, model: "gpt-6-luna", "ct.request_id": requestId, "ct.requested_tier": "fast", "ct.profile_mode": card ? "profile" : "general" }, async (span) => {
-      const response = await openai.responses.parse({ model: "gpt-6-luna", service_tier: "fast", store: false, instructions: LESSON_INSTRUCTIONS, prompt_cache_key: "ct-lesson-v1", input: lessonInput({ question: input.question, lang: turnKey!.lang, context: activeIndex < 0 ? [] : transcript.sentences.slice(Math.max(0, activeIndex - 3), activeIndex + 4), evidence, card, corrections, history: input.history, intent }), text: { format: zodTextFormat(LessonSchema, "lesson") }, max_output_tokens: 1200 }, { signal: request.signal });
+      const response = await openai.responses.parse({ model: "gpt-6-luna", service_tier: "fast", store: false, instructions: LESSON_INSTRUCTIONS[turnKey!.lang], prompt_cache_key: "ct-lesson-v1", input: lessonInput({ question: input.question, context: activeIndex < 0 ? [] : transcript.sentences.slice(Math.max(0, activeIndex - 3), activeIndex + 4), evidence, card, corrections, history: input.history, intent }), text: { format: zodTextFormat(LessonSchema, "lesson") }, max_output_tokens: 1200 }, { signal: request.signal });
       span.setAttributes({ "ct.served_tier": response.service_tier ?? "unknown", "ct.input_tokens": response.usage?.input_tokens ?? 0, "ct.output_tokens": response.usage?.output_tokens ?? 0 });
       return response;
     });

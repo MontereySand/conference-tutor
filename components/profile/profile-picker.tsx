@@ -15,7 +15,7 @@ export function ProfilePicker({cards,profileId,lang,onChange}:{cards:ProfileCard
     <Button variant="ghost" label={text.whatUsed} aria-haspopup="dialog" onClick={()=>{setDetails(true);setOpen(true);}}/>
     <Dialog isOpen={open} onOpenChange={setOpen} className="profile-dialog" width="56rem" maxHeight="85dvh">
       <div lang={htmlLang[lang]}>
-        <DialogHeader className="profile-dialog-header" title={details?text.whatUsed:text.chooseProfile} subtitle={text.profileNote}/>
+        <DialogHeader className="profile-dialog-header" title={details?text.whatUsed:text.chooseProfile} subtitle={text.profileNote} onOpenChange={setOpen}/>
         {details
           ? <section className="profile-details">
               <h3>{card?.name??text.general}</h3>
@@ -29,10 +29,10 @@ export function ProfilePicker({cards,profileId,lang,onChange}:{cards:ProfileCard
             </section>
           : <div className="profile-grid" role="group" aria-label={text.chooseProfile}>
               <Button className="profile-option" width="100%" variant={profileId===null?"primary":"secondary"} label={`${text.general}: ${text.generalProfileNote}`} aria-pressed={profileId===null} onClick={()=>{onChange(null);setOpen(false);}}>
-                <strong>{text.general}</strong><span>{text.generalProfileNote}</span>
+                <span className="profile-option-content"><strong>{text.general}</strong><span>{text.generalProfileNote}</span></span>
               </Button>
               {cards.map(item=><Button className="profile-option" width="100%" key={item.id} variant={item.id===profileId?"primary":"secondary"} label={`${item.name}: ${item.role}`} aria-pressed={item.id===profileId} onClick={()=>{onChange(item.id);setOpen(false);}}>
-                <strong>{item.name}</strong><span>{item.role}</span>
+                <span className="profile-option-content"><strong>{item.name}</strong><span>{item.role}</span></span>
               </Button>)}
             </div>}
         <div className="profile-dialog-footer">

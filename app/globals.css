@@ -89,6 +89,8 @@ body { margin: 0; min-height: 100vh; font-size: 1rem; line-height: 1.65; }
 .profile-grid > .profile-option.astryx-button { min-width: 0; min-height: 6rem; height: auto; padding: 1rem; }
 .profile-option { text-align: left; }
 .profile-option span { white-space: normal; overflow-wrap: anywhere; }
+.profile-option > span,.profile-option > span > span,.profile-option-content { width: 100%; }
+.profile-option-content { display: grid; gap: .4rem; text-align: left; }
 .profile-option[aria-pressed=true] { outline: 2px solid var(--ink); outline-offset: -2px; }
 .anchor-list { padding-left: 1.25rem; display: grid; gap: 1rem; margin-block: 1rem; }
 .anchor-list li { padding-left: .25rem; }
@@ -160,6 +162,7 @@ body { margin: 0; min-height: 100vh; font-size: 1rem; line-height: 1.65; }
 .setup-screen { max-width: 900px; margin: 8vh auto; padding: 2rem; display: grid; gap: 1.5rem; }
 .library-search-field,.question-field,.login-field { min-width: 0; width: 100%; }
 .profile-dialog-header h2 { font-size: 1.6rem; line-height: 1.4; }
+.profile-dialog-header .astryx-dialog-header-title-block { gap: .75rem; }
 .profile-dialog-header p { max-width: 68ch; }
 .login-screen { max-width: 42rem; min-height: 100svh; margin: auto; padding: 3rem 1.5rem; display: grid; align-content: center; gap: 2rem; }
 .login-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }

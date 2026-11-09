@@ -27,21 +27,25 @@ Public implementation/method: [index preparation](../scripts/index-elastic.ts) a
 - Resolved findings: [reference citations must not count as talk support](https://github.com/MontereySand/conference-tutor/pull/2#discussion_r4517305457), [malformed model output must not be treated as a client 400](https://github.com/MontereySand/conference-tutor/pull/2#discussion_r4517305628), and [arbitrary Host/origin trust](https://github.com/MontereySand/conference-tutor/pull/2#discussion_r4517341417).
 - [Infrastructure PR #1](https://github.com/MontereySand/conference-tutor/pull/1) was incorporated and automatically closed/merged. Its [wiring resolution](https://github.com/MontereySand/conference-tutor/pull/1#issuecomment-6751283451) records the mounted RUM component and called telemetry helpers. Wiring does not establish received telemetry.
 
-The approval above is Gitar's summary/check, not a formal GitHub `reviewDecision` approval (that field was empty). These checks apply to the named legacy head, not subsequent finish commits. Repository-only installation scope and CI-fix auto-apply settings are not established by these review comments. Final-release review and CI remain pending.
+The approval above is Gitar's summary/check, not a formal GitHub `reviewDecision` approval (that field was empty). These checks apply to the named legacy head, not subsequent finish commits. The signed-in installation was separately restricted to this repository. The unified finish PR's review, current CI and per-PR CI-fix auto-apply remain pending.
 
-## Dash0 — instrumentation exists; receipt proof pending
+## Dash0 — received telemetry and actual Agent0 analysis
 
-[Server telemetry](../lib/telemetry.ts), [server initialization](../instrumentation.node.ts), and [browser RUM](../components/telemetry/rum.tsx) provide the integration paths. A private three-panel dashboard definition for stage duration, lesson outcomes and browser performance passed the Dash0 CLI's structural dry-run. That is preparation only: it does not establish a rendered dashboard or valid queries over actual received data.
+[Server telemetry](../lib/telemetry.ts), [server initialization](../instrumentation.node.ts), and [browser RUM](../components/telemetry/rum.tsx) produced real received data during the rehearsal: 46 server spans and three completed-lesson logs for three original requests, matching browser request trace IDs, populated stage/outcome/RUM metrics, and a rendered three-panel dashboard. These are bounded historical observations, not a production benchmark or final-release test.
 
-Still pending: a real correlated browser → ask → retrieval/generation trace, received duration/cost/outcome metrics, lesson log and RUM payloads; inspection of actual exported fields for privacy; three populated dashboard panels; and an actual Agent0 answer citing the slowest request's trace and distinguishing retrieval from generation. No received telemetry, diagnosis or dashboard screenshot is claimed here.
+Agent0 inspected an actual rehearsal trace and reported generation at 3.915 seconds versus retrieval at 0.256 seconds, approximately 92% versus 6% of its 4.25-second server request. It could not name the generation backend because host metadata was not retained. No failure was manufactured and no root-cause fix is claimed.
 
-## Radar — observed baseline, release investigation pending
+Independent inspection found no question/answer/profile-identity or credential keys in the sampled server attributes. Actual browser log and trace bodies were also captured privately: sanitized URL components, vitals, HTTP method/status and response byte-size metadata were present, not source/answer bodies. This is sampled privacy evidence, not an exhaustive guarantee. Browser and server trace IDs correlate; direct parent-span continuity was not established. Original captures/dashboard/Agent0 screens remain private pending publication approval.
+
+## Radar — actual deployment Checks and investigation
 
 Before app deployment, read-only CLI observations on November 9 at 20:56:31 UTC showed the existing local kind node Ready and Radar 1.20.2 ready 1/1 with zero restarts. Signed-in Radar observations at 20:58 UTC showed that existing cluster Connected. This is actual connection/baseline evidence, not proof of the tutor release.
 
 The baseline Checks screen reported **170/217 passing, one High and ten Medium**. These findings predate the app deployment; their individual resource ownership was not established. They must not be described as app defects fixed by this release or as an all-clear.
 
-Still pending: the deployed app's full SHA and readiness, before/after Checks comparison, and a cited Radar assistant investigation of actual pods, restarts/events and Service selection. The free event hosted app is a separate release from local kind. [Local deployment](../scripts/deploy-kind.sh) and [guarded hosted deployment](../scripts/deploy-hosted.sh) are implementation links, not rollout evidence. No hosted digest, working judge URL or post-release all-clear is claimed.
+After the interim local deployment, Checks reported **197/247 passing**, with actionable findings increasing from 13 to 16. The Radar assistant actually inspected the workload and reported 1/1 ready at one snapshot. Its assessment remained **Still open**, with incomplete history and two unavailable citations. This was genuine operational use, not a clean Checks pass or a repaired incident. The earlier local application's POST503 issue was separately corrected in source; final-container validation remains required.
+
+The existing free event team is reused, with no duplicate environment. [Local deployment](../scripts/deploy-kind.sh) and [guarded hosted deployment](../scripts/deploy-hosted.sh) preserve code-only publication and readiness-before-Service-cutover boundaries. Final public digest, anonymous pull, hosted HTTPS access and same-revision end-to-end proof remain pending; workload readiness alone is not application success.
 
 ## Release and review limitations
 
