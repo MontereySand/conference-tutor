@@ -30,3 +30,19 @@ test("an honest source boundary remains usable without inventing an answer", () 
   const result = validate({ ...base, answer: "", cites: [], boundary });
   expect(result.answer).toBe(""); expect(result.boundary).toEqual(boundary);
 });
+test.each([
+  ["", "The circuit opens."],
+  [" \n\t ", "The circuit opens."],
+  ["What happens when the switch opens?", ""],
+  ["What happens when the switch opens?", " \n\t "],
+])("unusable optional prediction is dropped without losing the supported lesson (%j, %j)", (prompt, expected) => {
+  const input = { ...base, prediction: { prompt, expected, cites: ["t1"] } };
+  const result = validateLesson(input, evidence, ["talk-a", "ref-a"], null, options, "en");
+  expect(result.lesson).toEqual(base);
+  expect(result.validCitations).toBe(true);
+  expect(input.prediction).toEqual({ prompt, expected, cites: ["t1"] });
+});
+test("usable cited prediction remains available for practice", () => {
+  const prediction = { prompt: "What happens when the switch opens?", expected: "The circuit opens.", cites: ["t1"] };
+  expect(validate({ ...base, prediction }).prediction).toEqual(prediction);
+});

@@ -15,11 +15,12 @@ export function validateLesson(value: Lesson, evidence: Chunk[], sourceIds: stri
   const answerValid = supported(value.cites);
   const steps = value.steps.filter((step) => supported(step.cites));
   const referenceNotes = value.referenceNotes.filter((note) => allowed.get(note.refChunkId)?.kind === "reference");
-  const prediction = value.prediction && supported(value.prediction.cites) ? value.prediction : null;
+  const predictionSupported = !value.prediction || supported(value.prediction.cites);
+  const prediction = value.prediction?.prompt.trim() && value.prediction.expected.trim() && predictionSupported ? value.prediction : null;
   const bridge = answerValid && !corrections.noAnalogy && card?.anchors.some((anchor) => anchor.id === value.bridge?.anchorId) ? value.bridge : null;
   const honestBoundary = !value.answer.trim() && value.cites.length === 0 && value.boundary;
   return {
     lesson: { ...value, answer: answerValid ? value.answer : "", cites: answerValid ? [...new Set(value.cites)] : [], steps: answerValid ? steps : [], bridge, referenceNotes, prediction: answerValid ? prediction : null, boundary: answerValid || honestBoundary ? value.boundary : { reason: reasons[lang], nearbyQuestion: "" } },
-    validCitations: (answerValid || Boolean(honestBoundary)) && steps.length === value.steps.length && referenceNotes.length === value.referenceNotes.length && (!value.prediction || Boolean(prediction)),
+    validCitations: (answerValid || Boolean(honestBoundary)) && steps.length === value.steps.length && referenceNotes.length === value.referenceNotes.length && predictionSupported,
   };
 }
