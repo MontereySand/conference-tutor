@@ -1,0 +1,12 @@
+.env*
+**/.env*
+.git
+.agents
+.claude
+node_modules
+.next
+*.tsbuildinfo
+data/runtime
+data/transcripts/batches
+**/*.rejected.json
+data/profiles/provenance.json
