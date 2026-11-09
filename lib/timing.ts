@@ -24,6 +24,14 @@ export function applyTimingReview(transcript: Transcript, starts: Record<string,
       sentence.endMs = reviewed.sentences[index + 1]?.startMs ?? reviewed.durationMs;
     }
   }
+  for (const [index, sentence] of reviewed.sentences.entries()) {
+    const original = transcript.sentences[index]!;
+    if ((sentence.startMs !== original.startMs || sentence.endMs !== original.endMs) &&
+        sentence.words?.some(word => word.startMs < sentence.startMs || word.endMs > sentence.endMs)) {
+      // A corrected cue can invalidate machine alignment; never move words to invent precision.
+      delete sentence.words;
+    }
+  }
   reviewed.reviewed = reviewed.sentences.every(sentence => sentence.timing === "reviewed");
   return TranscriptSchema.parse(reviewed);
 }

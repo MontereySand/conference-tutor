@@ -68,6 +68,18 @@ describe("timing review application", () => {
     expect(applyTimingReview(transcript(), {})).toEqual(transcript());
   });
 
+  it.each([
+    { startMs: 150, retained: [false, true, true] },
+    { startMs: 350, retained: [true, false, true] },
+  ])("drops only word alignment crossed by a human cue at $startMs", ({ startMs, retained }) => {
+    const original = transcript();
+    for (const sentence of original.sentences) sentence.words = [{ text: sentence.text, startMs: sentence.startMs + 10, endMs: sentence.endMs - 10 }];
+    const result = applyTimingReview(original, { b: startMs });
+    expect(result.sentences.map(sentence => sentence.words !== undefined)).toEqual(retained);
+    expect(result.sentences[1]!.startMs).toBe(startMs);
+    expect(original.sentences.every(sentence => sentence.words !== undefined)).toBe(true);
+  });
+
   it.each([100, 99, 700, 701])("rejects equal or crossing neighboring starts: %s", startMs => {
     expect(() => applyTimingReview(transcript(), { b: startMs })).toThrow();
   });
