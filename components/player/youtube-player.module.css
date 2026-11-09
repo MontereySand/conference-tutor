@@ -6,5 +6,7 @@
 .controls { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
 .time { color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: .85rem; }
 .scrubber { flex: 1 1 10rem; min-width: 7rem; }
-.volume { width: 5rem; }
+.mute { position: absolute; top: .75rem; right: .75rem; opacity: 0; pointer-events: none; }
+.shell:hover .mute, .shell:focus-within .mute { opacity: 1; pointer-events: auto; }
+@media (hover: none), (any-pointer: coarse) { .mute { opacity: 1; pointer-events: auto; } }
 @media (max-width: 600px) { .scrubber { flex-basis: 100%; order: -1; } }

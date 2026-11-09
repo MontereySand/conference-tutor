@@ -81,26 +81,12 @@ body { margin: 0; min-height: 100vh; font-size: 1rem; line-height: 1.6; }
 .wordmark { font-weight: 700; text-decoration: none; }
 .eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; font-weight: 700; }
 .panel { border: 1px solid var(--line); border-radius: .5rem; padding: 1.75rem; }
-.button-row,.profile-controls { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+.button-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+.language-toggle { display: flex; flex: none; gap: .15rem; border: 1px solid currentColor; border-radius: .3rem; padding: .15rem; }
+.language-toggle .astryx-button > span { display: flex; align-items: center; gap: .3rem; }
 .section-heading { display: flex; gap: .75rem; justify-content: space-between; align-items: center; flex-wrap: wrap; }
 .section-heading svg { flex-shrink: 0; }
 
-.profile-dialog.astryx-dialog { width: calc(100% - 2rem); max-width: 56rem; max-height: min(85dvh,56rem); overflow-y: auto; overscroll-behavior: contain; padding: clamp(1.25rem,3vw,2rem); border: 1px solid var(--line); box-shadow: 0 24px 80px -32px var(--ink); }
-.profile-dialog-header,.profile-details { display: grid; gap: .75rem; }
-.profile-dialog-header h2 { font-size: 1.6rem; line-height: 1.4; }
-.profile-dialog-header .astryx-dialog-header-title-block { gap: .75rem; }
-.profile-dialog-header p { max-width: 68ch; }
-.profile-dialog-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .75rem; padding-top: 1rem; }
-.profile-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem; }
-.profile-grid > .profile-option.astryx-button { min-width: 0; min-height: 6rem; height: auto; padding: 1rem; }
-.profile-option { text-align: left; }
-.profile-option span { white-space: normal; overflow-wrap: anywhere; }
-.profile-option > span,.profile-option > span > span,.profile-option-content { width: 100%; }
-.profile-option-content { display: grid; gap: .4rem; text-align: left; }
-.profile-option[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--ink); }
-.anchor-list { padding-left: 1.25rem; display: grid; gap: 1rem; margin-block: 1rem; }
-.anchor-list li { padding-left: .25rem; }
-.anchor-list small { display: block; margin-top: .35rem; }
 
 .setup-screen { max-width: 900px; margin: 8vh auto; padding: 2rem; display: grid; gap: 1.5rem; }
 .setup-screen :where(h1,p),.login-screen :where(h1,p) { margin: 0; overflow-wrap: anywhere; }
@@ -115,8 +101,6 @@ body { margin: 0; min-height: 100vh; font-size: 1rem; line-height: 1.6; }
 
 @media(max-width:640px) {
   .panel { padding: 1.25rem; }
-  .profile-grid { grid-template-columns: minmax(0,1fr); }
-  .profile-grid > .profile-option.astryx-button { min-height: 5rem; }
   .setup-screen { padding: 1.25rem; }
 }
 @media(prefers-reduced-motion:reduce) {

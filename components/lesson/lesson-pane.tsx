@@ -2,14 +2,17 @@
 import { Button } from "@astryxdesign/core/Button";
 import { Collapsible } from "@astryxdesign/core/Collapsible";
 import { htmlLang, t, timestamp } from "@/lib/i18n";
+import { demoScenario } from "@/lib/demo-scenario";
 import type { Corrections, Lang, ProfileCard } from "@/lib/types";
 import type { AskResult, StageError } from "./types";
 import { StageErrorMessage } from "./stage-error";
 import { Prediction } from "./prediction";
+import { DemoDiagram } from "./demo-diagram";
 import styles from "./teaching.module.css";
 
-export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs,onSeek,onRetry,onCorrect,onQuestion}:{result:AskResult|null;lang:Lang;card:ProfileCard|undefined;corrections:Corrections;pending:boolean;error:StageError|null;askedAtMs:number|null;onSeek:(ms:number)=>void;onRetry:()=>void;onCorrect:(corrections:Corrections)=>void;onQuestion:(question:string)=>void}) {
+export function LessonPane({result,lang,card,corrections,pending,error,sourceId,currentMs,askedAtMs,onSeek,onRetry,onCorrect,onQuestion}:{result:AskResult|null;lang:Lang;card:ProfileCard|undefined;corrections:Corrections;pending:boolean;error:StageError|null;sourceId:string;currentMs:number;askedAtMs:number|null;onSeek:(ms:number)=>void;onRetry:()=>void;onCorrect:(corrections:Corrections)=>void;onQuestion:(question:string)=>void}) {
   const text=t(lang), previous=result!==null&&result.turnKey.lang!==lang;
+  const showDiagram=sourceId===demoScenario.sourceId&&[currentMs,askedAtMs].some(ms=>ms!==null&&ms>=demoScenario.startMs&&ms<demoScenario.endMs);
 
   function citations(ids:string[]) {
     return <div className={styles.citations} aria-label={text.citations}>
@@ -26,16 +29,12 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
   }
 
   return <aside className={styles.lesson} aria-label={text.lesson} aria-busy={pending}>
-    <header className={styles.header}>
-      <h2>{text.lesson}</h2>
-      {askedAtMs!==null&&<small>{text.bookmark} <strong>{timestamp(askedAtMs)}</strong></small>}
-    </header>
+    <DemoDiagram lang={lang} visible={showDiagram} card={card} noAnalogy={corrections.noAnalogy} onSeek={onSeek}/>
     {pending&&<p role="status">{text.pending}</p>}
     {error&&<div>
       <StageErrorMessage error={error} lang={lang}/>
       <Button variant="secondary" isDisabled={pending} onClick={onRetry} label={text.retry}/>
     </div>}
-    {!result&&!pending&&!error&&<p className={styles.hint}>{text.lessonEmpty}</p>}
     {result&&<div className={styles.content} lang={htmlLang[result.turnKey.lang]}>
       {previous&&<p className={styles.previous} role="status" lang={htmlLang[lang]}>{text.previousLanguage}</p>}
       {result.lesson.answer&&<section>

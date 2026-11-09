@@ -5,15 +5,15 @@ import { ContextMenu } from "@astryxdesign/core/ContextMenu";
 import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
 import { activeSentenceAt } from "@/lib/clock";
 import { t, timestamp } from "@/lib/i18n";
-import type { Concept, Lang, Sentence, Transcript } from "@/lib/types";
+import type { Lang, Sentence, Transcript } from "@/lib/types";
 import { boundedSelection, visibleGlosses } from "./transcript-helpers";
 import styles from "./transcript-panel.module.css";
 
 type Target = { sentence: Sentence; selection: string };
 
-export function TranscriptPanel({ transcript, english, lang, currentMs, concepts, onSeek, onConcept, onDump }: {
-  transcript: Transcript; english: Transcript; lang: Lang; currentMs: number; concepts: Concept[];
-  onSeek: (ms: number) => void; onConcept: (question: string) => void; onDump: (text: string) => void;
+export function TranscriptPanel({ transcript, english, lang, currentMs, onSeek, onDump }: {
+  transcript: Transcript; english: Transcript; lang: Lang; currentMs: number;
+  onSeek: (ms: number) => void; onDump: (text: string) => void;
 }) {
   const [follow, setFollow] = useState(true);
   const [original, setOriginal] = useState(false);
@@ -77,9 +77,6 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
   function actions(item: Target | null) {
     const value = item?.selection ?? "";
     return [
-      { label: text.transcriptExplainSelection, isDisabled: !value, onClick: () => onConcept(`${text.transcriptExplainPrompt} ${value}`) },
-      { label: text.transcriptDefine, isDisabled: !value, onClick: () => onConcept(`${text.transcriptDefinePrompt} ${value}`) },
-      { label: text.transcriptSimplify, isDisabled: !value, onClick: () => onConcept(`${text.transcriptSimplifyPrompt} ${value}`) },
       { label: text.transcriptAddDump, isDisabled: !value, onClick: () => onDump(value) },
       { label: text.transcriptEdit, isDisabled: !item, onClick: () => { if (item) { const key = keyFor(item.sentence); setEditing(key); setDraft(annotations[key] ?? item.sentence.text); setFollow(false); } } },
       { label: text.transcriptCopy, isDisabled: !value, onClick: () => { void (async () => { try { if (!navigator.clipboard) throw new Error("Clipboard unavailable"); await navigator.clipboard.writeText(value); setClipboardError(false); } catch { setClipboardError(true); } })(); } },
@@ -88,8 +85,7 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
 
   return <section className={styles.panel} aria-label={text.transcript} onKeyDown={event => event.stopPropagation()}>
     <header className={styles.heading}><h2>{text.transcript}</h2>{!follow && <Button variant="secondary" size="sm" label={text.backNow} onClick={() => { savedSelection.current = null; setFollow(true); }} />}</header>
-    <div className={styles.notices}><small>{transcript.reviewed ? text.reviewed : text.derived}</small>{transcript.machineTranslated && <small>{text.machine}</small>}{lang !== "en" && <label><input type="checkbox" checked={original} onChange={event => setOriginal(event.target.checked)} /> {text.showOriginal}</label>}</div>
-    <small className={styles.selectionHint}>{text.transcriptSelectionHint}</small>
+    {lang !== "en" && <div className={styles.notices}><label><input type="checkbox" checked={original} onChange={event => setOriginal(event.target.checked)} /> {text.showOriginal}</label></div>}
     {clipboardError && <p className={styles.error} role="status">{text.transcriptCopyFailed}</p>}
     <div ref={panel} className={styles.scroll} tabIndex={0} aria-label={text.transcript} onWheel={() => setFollow(false)} onTouchMove={() => setFollow(false)} onPointerDown={() => { pointer.current = true; }} onPointerUp={() => { pointer.current = false; }} onPointerCancel={() => { pointer.current = false; }} onScroll={() => { if (pointer.current) setFollow(false); }} onKeyDown={event => { if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) setFollow(false); }}>
       <ContextMenu label={text.transcriptActions} presentation="adaptive" items={actions(target)} onOpenChange={open => { if (open) setFollow(false); }} onContextMenu={event => {
@@ -116,6 +112,5 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
       </ContextMenu>
     </div>
     <div className={styles.glosses}>{visibleGlosses(transcript.glosses, currentMs).map(gloss => <aside key={gloss.id} className={styles.gloss}><small>{text.transcriptPrepared}</small><strong>{gloss.term}</strong><p>{gloss.text}</p><small>{text.transcriptSources}: {gloss.cites.join(", ")}</small></aside>)}</div>
-    <div className={styles.concepts} aria-label={text.concepts}>{concepts.filter(concept => currentMs >= concept.startMs && currentMs < concept.endMs).map(concept => <Button variant="secondary" size="sm" key={concept.id} label={`${concept.title[lang]} ↗`} onClick={() => onConcept(concept.suggested[lang])} />)}</div>
   </section>;
 }

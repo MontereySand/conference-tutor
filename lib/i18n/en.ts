@@ -33,6 +33,7 @@ export const en = {
   transcriptPrepared: "Prepared definition · source-backed",
   transcriptSources: "Source citations",
   dumpTitle: "Dump",
+  dumpSend: "Send question",
   dumpInstructions: "Write thoughts or a question here. Nothing is sent until you choose Explain.",
   dumpPlaceholder: "What are you thinking about?",
   checkUnderstanding: "Check your understanding",
