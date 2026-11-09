@@ -59,7 +59,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
  }
  function switchSelection(nextLang:Lang,nextProfile:string|null){
   if(nextLang===current.current.lang&&nextProfile===current.current.profileId)return;
-  const languageChanged=nextLang!==current.current.lang;
+  const languageChanged=nextLang!==current.current.lang||nextLang!==lang;
   const observedMs=player.current?.getTimeMs(),ms=observedMs!==undefined&&Number.isFinite(observedMs)?observedMs:currentMs;
   controller.current?.abort();controller.current=null;
   update({type:"switch",sourceId:source.id,profileId:nextProfile,lang:nextLang});
