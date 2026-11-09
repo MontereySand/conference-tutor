@@ -59,12 +59,14 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
  }
  function switchSelection(nextLang:Lang,nextProfile:string|null){
   if(nextLang===current.current.lang&&nextProfile===current.current.profileId)return;
+  const languageChanged=nextLang!==current.current.lang;
   const observedMs=player.current?.getTimeMs(),ms=observedMs!==undefined&&Number.isFinite(observedMs)?observedMs:currentMs;
   controller.current?.abort();controller.current=null;
   update({type:"switch",sourceId:source.id,profileId:nextProfile,lang:nextLang});
   navigation.current={sourceId:source.id,lang:nextLang,profileId:nextProfile};
   const params=new URLSearchParams({lang:nextLang,t:String(ms/1000)});if(nextProfile)params.set("profile",nextProfile);if(review)params.set("review","1");
-  router.replace("/watch/"+source.id+"?"+params,{scroll:false});
+  const url="/watch/"+source.id+"?"+params;
+  if(languageChanged)router.replace(url,{scroll:false});else window.history.replaceState(null,"",url);
  }
  function returnTalk(){surface.current?.focus({preventScroll:true});}
  function seek(ms:number){player.current?.seekTo(ms);surface.current?.focus({preventScroll:true});}

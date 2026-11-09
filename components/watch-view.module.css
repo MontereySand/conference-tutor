@@ -18,9 +18,10 @@
 @media (max-width: 800px), (max-height: 520px) {
  .header { flex-wrap: wrap; }
  .source { flex: 1 1 12rem; }
- .identity { margin-left: auto; }
+ .identity { margin-left: 0; flex-wrap: wrap; min-width: 0; max-width: 100%; }
  .canvas { width: 100%; height: auto; display: flex; flex-direction: column; }
  .video { aspect-ratio: 16 / 9; }
  .transcript, .lesson, .dump { overflow: visible; min-height: 12rem; }
+ .transcript { height: min(60dvh, 32rem); overflow: hidden; }
  .footer { position: static; }
 }
