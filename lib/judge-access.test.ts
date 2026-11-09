@@ -116,9 +116,9 @@ test("public exceptions remain narrow, and missing hosted configuration returns 
   for (const path of ["/api/health", "/favicon.ico", "/_next/static/chunks/test.js"]) {
     expect(proxy(new NextRequest(config.origin + path)).headers.get("x-middleware-next")).toBe("1");
   }
-  for (const path of ["/", "/login?lang=hi", "/api/ask", "/api/access"]) expect(proxy(new NextRequest(config.origin + path)).status).toBe(503);
+  for (const path of ["/", "/login?lang=es", "/api/ask", "/api/access"]) expect(proxy(new NextRequest(config.origin + path)).status).toBe(503);
   vi.stubEnv("JUDGE_ACCESS_CODE", config.code);
-  const login = proxy(new NextRequest(config.origin + "/login?lang=zh"));
+  const login = proxy(new NextRequest(config.origin + "/login?lang=es"));
   expect(login.headers.get("x-middleware-next")).toBe("1");
   expect(login.headers.get("content-security-policy")).toContain("connect-src 'self'");
   expect(proxy(new NextRequest(config.origin + "/login?lang=es&code=never-reflect")).headers.get("location")).toBe(config.origin + "/login?lang=es");

@@ -2,6 +2,8 @@
 
 Understand the hard part of a technical talk, then return to the same moment. Elasticsearch is the source/retrieval layer; explanations stay tied to retrieved evidence. General mode or a supplied professional card changes the explanation, not source facts.
 
+The interface supports English and Spanish and uses official [Meta Astryx](https://github.com/meta/astryx) controls with Noto Sans. Grounded steps and optional practice use progressive disclosure inspired by [LearnHarness](https://github.com/amosblomqvist/learnharness/tree/da08cb5f7d098598ba963c6689b22054c9f2a5a3): the direct answer remains visible; the expected practice answer appears only after an attempt or explicit Skip. Source support never becomes an invented explanation. Rapid seeks wait for the real player clock before saving the question bookmark; unavailable-video mode preserves the selected context.
+
 ## Private inputs, public code
 
 Code is public; the talk transcript, reference excerpts and profile cards are prepared privately and are **not** in this repository. A clone builds and runs its inline-fixture tests without them, but cannot provide the private tutor experience until the prepared data is supplied. The approved invited-judge deployment uses a passcode gate, a public code-only image and private runtime data/secrets; no public dataset is offered. Local images containing private data must never be pushed.
