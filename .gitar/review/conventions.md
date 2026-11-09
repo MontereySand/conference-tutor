@@ -9,4 +9,4 @@
 - Profile facts may change explanations, never source claims; explicit corrections override profile cues.
 - Use palette tokens. Burnt orange at most once per view, never body text. Preserve focus, reduced motion and keyboard access.
 - Never commit prepared data or paste transcript text, reference excerpts or profile facts into code, fixtures, tests or documentation.
-- CI and build must work without private data or credentials. Do not publish local images or deploy publicly.
+- CI and build must work without private data or credentials. Never publish the data-bearing local image. Only the code-only public-runtime image and passcode-gated free event deployment with privately mounted prepared inputs are authorized.

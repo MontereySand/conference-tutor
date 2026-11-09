@@ -8,7 +8,10 @@ const reasons: Record<Lang, string> = {
 };
 export function validateLesson(value: Lesson, evidence: Chunk[], sourceIds: string[], card: ProfileCard | null, corrections: Corrections, lang: Lang): { lesson: Lesson; validCitations: boolean } {
   const allowed = new Map(evidence.filter((chunk) => sourceIds.includes(chunk.sourceId)).map((chunk) => [chunk.chunkId, chunk]));
-  const supported = (ids: string[]) => ids.length > 0 && ids.every((id) => allowed.get(id)?.kind === "talk" && allowed.get(id)?.sourceId === sourceIds[0]);
+  const supported = (ids: string[]) => ids.length > 0 && ids.every((id) => {
+    const chunk = allowed.get(id);
+    return chunk?.kind === "talk" && chunk.sourceId === sourceIds[0];
+  });
   const answerValid = supported(value.cites);
   const steps = value.steps.filter((step) => supported(step.cites));
   const referenceNotes = value.referenceNotes.filter((note) => allowed.get(note.refChunkId)?.kind === "reference");

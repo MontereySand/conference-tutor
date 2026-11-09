@@ -6,4 +6,5 @@ export type ProfileCard = { id: string; name: string; role: string; anchors: { i
 export type Concept = { id: string; startMs: number; endMs: number; title: Record<Lang, string>; suggested: Record<Lang, string> };
 export type TurnKey = { sourceId: string; profileId: string | null; lang: Lang; version: number; turnId: string };
 export type Corrections = { depth: "simple" | "standard" | "deep"; noAnalogy: boolean };
+export type AskRequestKind = "question" | "regenerate";
 export type HistoryTurn = { question: string; answer: string };

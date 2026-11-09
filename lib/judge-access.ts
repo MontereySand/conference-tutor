@@ -11,7 +11,7 @@ export const PRIVATE_HEADERS = {
 
 type HostedAccess = { mode: "hosted"; origin: string; code: string; secret: string };
 type Access = { mode: "local" } | { mode: "unavailable" } | (HostedAccess & { authenticated: boolean });
-type AccessEnvironment = Partial<Pick<NodeJS.ProcessEnv, "JUDGE_ACCESS_REQUIRED" | "JUDGE_ACCESS_CODE" | "JUDGE_SESSION_SECRET" | "PUBLIC_APP_ORIGIN">>;
+type AccessEnvironment = Record<string, string | undefined>;
 
 function loopback(host: string): boolean {
   try {
