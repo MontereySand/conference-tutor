@@ -56,6 +56,20 @@ describe("session isolation",()=>{
     expect(state.askedAtMs).toBe(3200);
     expect(state.wasPlaying).toBe(false);
   });
+  it.each(["error","cancel"] as const)("does not offer an old lesson under a later %s question's bookmark",outcome=>{
+    let state=sessionReducer(createSession("invented",null,"en"),{type:"bookmark",ms:10000,wasPlaying:true});
+    state=sessionReducer(state,{type:"begin",key,request});
+    state=sessionReducer(state,{type:"result",result});
+    state=sessionReducer(state,{type:"bookmark",ms:100000,wasPlaying:true});
+    const nextKey={...key,turnId:"next"};
+    state=sessionReducer(state,{type:"begin",key:nextKey,request:{...request,question:"A later question"}});
+    state=sessionReducer(state,outcome==="cancel"?{type:"cancel"}:{type:"error",key:nextKey,error:{stage:"generate",code:"unavailable"}});
+    expect(state.result).toBeNull();
+    expect(state.resultQuestion).toBeNull();
+    expect(state.askedAtMs).toBe(100000);
+    expect(state.lastRequest?.question).toBe("A later question");
+    expect(state.history[0]?.question).toBe("Why?");
+  });
   it("queues the very first pending question across repeated locale switches",()=>{
     let state=sessionReducer(createSession("invented",null,"en"),{type:"bookmark",ms:687000,wasPlaying:true});
     state=sessionReducer(state,{type:"begin",key,request});

@@ -24,7 +24,7 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
   const [clipboardError, setClipboardError] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const rows = useRef(new Map<string, HTMLDivElement>());
-  const savedSelection = useRef<{ id: string; text: string } | null>(null);
+  const savedSelection = useRef<{ ids: Set<string>; text: string } | null>(null);
   const pointer = useRef(false);
   const index = activeSentenceAt(transcript.sentences, currentMs);
   const active = transcript.sentences[index];
@@ -41,16 +41,31 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
     }
   }, [active, follow]);
 
-  function captureSelection(sentence: Sentence) {
-    const selection = window.getSelection(), row = rows.current.get(sentence.id);
-    if (selection && row && !selection.isCollapsed && row.contains(selection.anchorNode) && row.contains(selection.focusNode)) {
-      const value = boundedSelection(selection.toString());
-      if (value) { savedSelection.current = { id: sentence.id, text: value }; setFollow(false); return value; }
+  function captureSelection() {
+    const selection = window.getSelection(), container = panel.current;
+    if (!selection || !container || selection.isCollapsed || !container.contains(selection.anchorNode) || !container.contains(selection.focusNode)) return "";
+    const range = selection.getRangeAt(0), parts: string[] = [], ids = new Set<string>();
+    for (const row of container.querySelectorAll<HTMLElement>("[data-sentence-id]")) {
+      const paragraphs = [row.querySelector(`.${styles.caption}`), ...row.querySelectorAll(`.${styles.original}`)];
+      for (const paragraph of paragraphs) {
+        if (!paragraph || !range.intersectsNode(paragraph)) continue;
+        const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+        let value = "", node: Node | null;
+        while ((node = walker.nextNode())) {
+          if (!range.intersectsNode(node)) continue;
+          const start = node === range.startContainer ? range.startOffset : 0;
+          const end = node === range.endContainer ? range.endOffset : node.textContent?.length ?? 0;
+          value += (node.textContent ?? "").slice(start, end);
+        }
+        if (value.trim()) { parts.push(value); if (row.dataset.sentenceId) ids.add(row.dataset.sentenceId); break; }
+      }
     }
-    return "";
+    const value = boundedSelection(parts.join("\n"));
+    if (value) { savedSelection.current = { ids, text: value }; setFollow(false); }
+    return value;
   }
   function choose(sentence: Sentence, useSaved: boolean) {
-    const selection = captureSelection(sentence) || (useSaved && savedSelection.current?.id === sentence.id ? savedSelection.current.text : "");
+    const selection = captureSelection() || (useSaved && savedSelection.current?.ids.has(sentence.id) ? savedSelection.current.text : "");
     setTarget({ sentence, selection: selection || boundedSelection(annotations[keyFor(sentence)] ?? sentence.text) });
     setClipboardError(false);
     setFollow(false);
@@ -88,7 +103,7 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
       }}>
         {transcript.sentences.map((sentence, i) => {
           const key = keyFor(sentence), annotation = annotations[key], isActive = i === index;
-          return <div key={sentence.id} data-sentence-id={sentence.id} ref={node => { if (node) rows.current.set(sentence.id, node); else rows.current.delete(sentence.id); }} className={`${styles.row} ${isActive ? styles.active : i < index || (index < 0 && sentence.endMs <= currentMs) ? styles.past : ""}`} aria-current={isActive ? "true" : undefined} onMouseUp={event => { if (!(event.target instanceof Element && event.target.closest("button")) && !captureSelection(sentence)) savedSelection.current = null; }} onKeyUp={() => { captureSelection(sentence); }}>
+          return <div key={sentence.id} data-sentence-id={sentence.id} ref={node => { if (node) rows.current.set(sentence.id, node); else rows.current.delete(sentence.id); }} className={`${styles.row} ${isActive ? styles.active : i < index || (index < 0 && sentence.endMs <= currentMs) ? styles.past : ""}`} aria-current={isActive ? "true" : undefined} onMouseUp={event => { if (!(event.target instanceof Element && event.target.closest("button")) && !captureSelection()) savedSelection.current = null; }} onKeyUp={() => { captureSelection(); }}>
             <div className={styles.rowTools}>
               <Button variant="ghost" size="sm" className={styles.timeButton} label={`${text.seek} ${timestamp(sentence.startMs)}`} onClick={() => onSeek(sentence.startMs)}>{timestamp(sentence.startMs)}</Button>
               <DropdownMenu button={{ variant: "ghost", size: "sm", className: styles.menuButton, label: `${text.transcriptActions} ${timestamp(sentence.startMs)}`, children: "⋯" }} hasChevron={false} presentation="adaptive" onOpenChange={open => { if (open) choose(sentence, true); }} items={actions(target?.sentence.id === sentence.id ? target : { sentence, selection: boundedSelection(annotation ?? sentence.text) })} />

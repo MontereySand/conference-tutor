@@ -5,6 +5,7 @@ Understand a technical talk without stopping it. Elasticsearch is the source/ret
 Intro presents an overlapping fan of abstract profile cards, with the user's card last. Learn uses a theatre-style four-panel canvas: real 16:9 video, synchronized transcript, explanations and an editable Dump. The interface supports English and Spanish using official [Meta Astryx](https://github.com/meta/astryx) controls, IBM Plex Mono and Playfair Display. Selecting text, editing local caption annotations, asking questions and receiving answers leave playback running; transport and citation actions explicitly seek. Questions capture a bookmark, and retries/corrections retain that original context. Learner annotations never replace source evidence.
 Grounded steps and optional practice use progressive disclosure inspired by [LearnHarness](https://github.com/amosblomqvist/learnharness/tree/da08cb5f7d098598ba963c6689b22054c9f2a5a3): the direct answer remains visible; the expected practice answer appears only after an attempt or explicit Skip. Source support never becomes an invented explanation.
 The selected interface language also controls generated teaching fields, even when the original question is written in the other language.
+Submitting a new question replaces the previous explanation; a failed or cancelled request cannot leave an old answer attached to a newer bookmark. Fullscreen includes the complete theatre canvas and its bottom transport.
 
 ## Private inputs, public code
 

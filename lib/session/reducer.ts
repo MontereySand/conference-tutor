@@ -25,7 +25,7 @@ export function sessionReducer(state: Session, action: SessionAction): Session {
       return {...state,lang:action.lang,version:state.version+1,pending:null,queuedRequest,error:null,history:[]};
     }
     case "question": return {...state,question:action.question};
-    case "bookmark": return {...state,askedAtMs:action.ms,wasPlaying:action.wasPlaying};
+    case "bookmark": return {...state,askedAtMs:action.ms,wasPlaying:action.wasPlaying,result:null,resultQuestion:null};
     case "begin": return {...state,pending:action.key,lastRequest:action.request,queuedRequest:null,error:null,corrections:action.request.corrections};
     case "result": {
       if (!state.pending || !state.lastRequest || !sameTurn(state.pending,action.result.turnKey)) return state;
