@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, HttpError, parseJson, requireSameOrigin } from "../../../lib/http";
-import { admitAccessAttempt, createJudgeSession, getJudgeAccess, JUDGE_COOKIE, JUDGE_SESSION_SECONDS, matchesJudgeCode, PRIVATE_HEADERS } from "../../../lib/judge-access";
+import { createJudgeSession, getJudgeAccess, JUDGE_COOKIE, JUDGE_SESSION_SECONDS, matchesJudgeCode, PRIVATE_HEADERS } from "../../../lib/judge-access";
 
 const Login = z.object({ code: z.string().min(1).max(256) }).strict();
 
@@ -11,11 +11,10 @@ export async function POST(request: Request) {
     if (access.mode === "unavailable") throw new HttpError(503, "setup");
     requireSameOrigin(request);
     if (new URL(request.url).search) throw new HttpError(400, "invalid");
-    const client = request.headers.get("x-forwarded-for")?.split(",", 1)[0].trim() || "unknown";
-    if (!admitAccessAttempt(client)) throw new HttpError(429, "rate");
     if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") throw new HttpError(415, "invalid");
     const { code } = await parseJson(request, Login, 4096);
     if (access.mode === "local") return NextResponse.json({ ok: true }, { headers: PRIVATE_HEADERS });
+    // A generated bearer credential, not a PIN: anonymous attempts must not lock out valid judges.
     if (!matchesJudgeCode(code, access.code)) throw new HttpError(401, "passcode");
     const now = Date.now();
     const response = NextResponse.json({ ok: true }, { headers: PRIVATE_HEADERS });
@@ -27,7 +26,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const response = apiError(error, "access");
     for (const [key, value] of Object.entries(PRIVATE_HEADERS)) response.headers.set(key, value);
-    if (response.status === 429) response.headers.set("Retry-After", "60");
     return response;
   }
 }

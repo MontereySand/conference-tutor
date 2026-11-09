@@ -2,7 +2,6 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export const JUDGE_COOKIE = "__Host-ct-judge";
 export const JUDGE_SESSION_SECONDS = 8 * 60 * 60;
-export const ACCESS_ATTEMPTS_PER_MINUTE = 20;
 export const PRIVATE_HEADERS = {
   "Cache-Control": "private, no-store, max-age=0",
   "Referrer-Policy": "no-referrer",
@@ -40,7 +39,7 @@ export function getJudgeAccess(request: Request, cookie?: string, env: AccessEnv
     const canonical = new URL(origin);
     if ((required && required !== "1") || canonical.protocol !== "https:" || canonical.origin !== origin ||
         canonical.username || canonical.password || canonical.host !== host ||
-        !strongSecret(code, 16) || !strongSecret(secret, 32) || code === secret) return { mode: "unavailable" };
+        !strongSecret(code, 32) || !strongSecret(secret, 32) || code === secret) return { mode: "unavailable" };
   } catch { return { mode: "unavailable" }; }
   const config: HostedAccess = { mode: "hosted", origin, code, secret };
   return { ...config, authenticated: validJudgeSession(cookie, config, now) };
@@ -70,15 +69,4 @@ export function validJudgeSession(cookie: string | undefined, config: HostedAcce
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected) || actual.toString("base64url") !== match[4]) return false;
   const issued = Number(match[2]), expires = Number(match[3]), seconds = Math.floor(now / 1000);
   return expires - issued === JUDGE_SESSION_SECONDS && issued <= seconds && expires > seconds;
-}
-
-const attemptWindows = new Map<string, { start: number; count: number }>();
-export function admitAccessAttempt(client: string, now = Date.now()): boolean {
-  const window = attemptWindows.get(client);
-  const current = !window || now - window.start >= 60_000 || now < window.start ? { start: now, count: 0 } : window;
-  if (current.count >= ACCESS_ATTEMPTS_PER_MINUTE) return false;
-  current.count++;
-  attemptWindows.set(client, current);
-  if (attemptWindows.size > 10_000) attemptWindows.delete(attemptWindows.keys().next().value!);
-  return true;
 }

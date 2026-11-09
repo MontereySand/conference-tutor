@@ -2,10 +2,10 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { proxy } from "../proxy";
 import { POST } from "../app/api/access/route";
-import { ACCESS_ATTEMPTS_PER_MINUTE, admitAccessAttempt, createJudgeSession, getJudgeAccess, JUDGE_COOKIE, JUDGE_SESSION_SECONDS, matchesJudgeCode, validJudgeSession } from "./judge-access";
+import { createJudgeSession, getJudgeAccess, JUDGE_COOKIE, JUDGE_SESSION_SECONDS, matchesJudgeCode, validJudgeSession } from "./judge-access";
 
 const now = 1_800_000_000_000;
-const config = { mode: "hosted" as const, origin: "https://judges.example", code: "test-code-A7b9C2d4E6f8", secret: "test-session-secret-X7c9V2n4B6m8Q0p3R5s1" };
+const config = { mode: "hosted" as const, origin: "https://judges.example", code: "fixture-judge-code_ABCdef0123456789", secret: "test-session-secret-X7c9V2n4B6m8Q0p3R5s1" };
 const env = { JUDGE_ACCESS_REQUIRED: "1", PUBLIC_APP_ORIGIN: config.origin, JUDGE_ACCESS_CODE: config.code, JUDGE_SESSION_SECRET: config.secret };
 
 beforeEach(() => {
@@ -75,6 +75,7 @@ test("required, partial, weak, and noncanonical configuration fails closed even 
     { JUDGE_ACCESS_REQUIRED: "1" }, { PUBLIC_APP_ORIGIN: config.origin },
     { ...env, JUDGE_ACCESS_CODE: "" }, { ...env, JUDGE_SESSION_SECRET: "" },
     { ...env, JUDGE_ACCESS_CODE: "a".repeat(32) }, { ...env, JUDGE_SESSION_SECRET: "short" },
+    { ...env, JUDGE_ACCESS_CODE: config.code.slice(0, 31) },
     { ...env, JUDGE_SESSION_SECRET: config.code }, { ...env, JUDGE_ACCESS_REQUIRED: "0" },
     ...["http://judges.example", config.origin + "/", config.origin + "/path", config.origin + "?x=y", config.origin + "#x", "https://user@judges.example"].map(origin => ({ ...env, PUBLIC_APP_ORIGIN: origin })),
   ];
@@ -146,19 +147,17 @@ test("login rejects foreign origins, oversized bodies and wrong passcodes; succe
   expect(await response.text()).not.toContain(config.code);
 });
 
-test("attempt admission is isolated by client and recovers at the next window", async () => {
-  const client = "192.0.2.10";
-  for (let i = 0; i < ACCESS_ATTEMPTS_PER_MINUTE; i++) expect(admitAccessAttempt(client, now)).toBe(true);
-  expect(admitAccessAttempt(client, now)).toBe(false);
-  expect(admitAccessAttempt("192.0.2.11", now)).toBe(true);
-
-  const request = (ip: string) => new Request(config.origin + "/api/access", {
-    method: "POST", headers: { origin: config.origin, "content-type": "application/json", "x-forwarded-for": ip },
-    body: JSON.stringify({ code: config.code }),
+test("anonymous attempts cannot lock out a valid judge and forwarded headers grant no access", async () => {
+  const request = (code: string, forwarded?: string) => new Request(config.origin + "/api/access", {
+    method: "POST", headers: { origin: config.origin, "content-type": "application/json", ...(forwarded ? { "x-forwarded-for": forwarded } : {}) },
+    body: JSON.stringify({ code }),
   });
-  const limited = await POST(request(client));
-  expect(limited.status).toBe(429);
-  expect(limited.headers.get("retry-after")).toBe("60");
-  expect((await POST(request("192.0.2.11"))).status).toBe(200);
-  expect(admitAccessAttempt(client, now + 60_000)).toBe(true);
+  for (let i = 0; i < 25; i++) {
+    expect((await POST(request("wrong-" + i, "192.0.2." + i))).status).toBe(401);
+  }
+  const response = await POST(request(config.code));
+  expect(response.status).toBe(200);
+  const cookie = response.headers.get("set-cookie")!.split(";")[0].split("=")[1];
+  expect(validJudgeSession(cookie, config, now)).toBe(true);
+  expect((await POST(request("still-wrong", "127.0.0.1"))).status).toBe(401);
 });

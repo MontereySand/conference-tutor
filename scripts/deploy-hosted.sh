@@ -79,7 +79,7 @@ try {
     requireValue(url.protocol === 'https:' && !url.username && !url.password, `Invalid ${key}`);
   }
   requireValue(stringData.JUDGE_ACCESS_REQUIRED === '1', 'Hosted access requires JUDGE_ACCESS_REQUIRED=1');
-  requireValue(stringData.JUDGE_ACCESS_CODE.trim().length >= 16, 'JUDGE_ACCESS_CODE must have at least 16 characters');
+  requireValue(stringData.JUDGE_ACCESS_CODE.trim().length >= 32, 'JUDGE_ACCESS_CODE must have at least 32 characters');
   requireValue(stringData.JUDGE_SESSION_SECRET.trim().length >= 32, 'JUDGE_SESSION_SECRET must have at least 32 characters');
   for (const key of ['JUDGE_ACCESS_CODE', 'JUDGE_SESSION_SECRET']) {
     requireValue(stringData[key].length <= 256 && /^[A-Za-z0-9_-]+$/.test(stringData[key]) && new Set(stringData[key]).size >= 8,

@@ -98,7 +98,7 @@ test('rejects a mismatched remote API before any mutation', t => {
 });
 
 test('requires hosted auth and exact origin before uploading anything', async t => {
-  for (const env of ['JUDGE_ACCESS_REQUIRED=0', 'JUDGE_ACCESS_CODE=short', 'JUDGE_SESSION_SECRET=short', 'PUBLIC_APP_ORIGIN=https://wrong.cnh.radarhq.io']) {
+  for (const env of ['JUDGE_ACCESS_REQUIRED=0', 'JUDGE_ACCESS_CODE=short', `JUDGE_ACCESS_CODE=${code.slice(0, 31)}`, 'JUDGE_SESSION_SECRET=short', 'PUBLIC_APP_ORIGIN=https://wrong.cnh.radarhq.io']) {
     await t.test(env.split('=')[0], child => {
       const result = fixture(child, { env: `${env}\n` }).run();
       assert.equal(result.status, 1);
