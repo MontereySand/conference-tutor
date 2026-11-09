@@ -51,7 +51,7 @@
 .diagramSteps li { display: grid; justify-items: center; gap: .15rem; text-align: center; font-size: .7rem; line-height: 1.25; }
 .diagramSteps li span { width: 100%; padding: .35rem; border: 2px solid var(--ink); }
 .preparedExplanation { display: grid; gap: .4rem; font-size: .75rem; line-height: 1.4; }
-.preparedExplanation p { margin: 0; }
+.preparedExplanation p { margin: 0; font-size: inherit; line-height: inherit; }
 .preparedExplanation small { font-size: .7rem; }
 @media (max-width: 800px) { .diagramBody { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
