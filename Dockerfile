@@ -18,6 +18,7 @@ RUN npm run build
 FROM node:26-slim AS public-runtime
 WORKDIR /app
 ARG GIT_SHA=dev
+LABEL org.opencontainers.image.revision=$GIT_SHA
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \

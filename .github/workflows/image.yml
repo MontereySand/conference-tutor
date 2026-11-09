@@ -1,12 +1,20 @@
 name: Public runtime image
 on:
   workflow_dispatch:
+    inputs:
+      architecture:
+        description: Architecture observed on the target event nodes
+        required: true
+        type: choice
+        options:
+          - amd64
+          - arm64
 permissions:
   contents: read
   packages: write
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,6 +31,20 @@ jobs:
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA}"
           docker build --target public-runtime --build-arg "GIT_SHA=$GITHUB_SHA" --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag "$image" .
+      - name: Assert public image boundary before push
+        shell: bash
+        run: |
+          docker run --rm --network none --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --entrypoint node \
+            "ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA}" \
+            --input-type=module -e '
+              import assert from "node:assert/strict";
+              import { readdirSync } from "node:fs";
+              const entries = readdirSync("/app");
+              assert.ok(!entries.some(name => name === "data" || name === ".git" || name.startsWith(".env")), "Private path in public image");
+              assert.match(process.env.GIT_SHA, /^[0-9a-f]{40}$/);
+              assert.equal(process.env.GIT_SHA, process.argv[1]);
+            ' "$GITHUB_SHA"
       - name: Publish code-only public runtime
         shell: bash
         env:
