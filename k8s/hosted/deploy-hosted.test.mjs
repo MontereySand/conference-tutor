@@ -14,6 +14,9 @@ function fixture(t, options = {}) {
   const root = mkdtempSync(resolve(tmpdir(), 'ct-hosted-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const data = resolve(root, 'data');
+  const templateFile = resolve(root, 'k8s/hosted/deployment.json');
+  mkdirSync(dirname(templateFile), { recursive: true });
+  writeFileSync(templateFile, readFileSync(resolve(appRoot, 'k8s/hosted/deployment.json')));
   function json(path, value) {
     const file = resolve(data, path);
     mkdirSync(dirname(file), { recursive: true });
@@ -74,15 +77,15 @@ else if (cmd[0] === 'get') {
 }
 `, { mode: 0o700 });
   function run(extra = [], overrides = {}) {
-    const result = spawnSync('bash', ['scripts/deploy-hosted.sh', config, 'fixture', image, envFile, data, ...extra], {
-      cwd: appRoot, encoding: 'utf8', timeout: 30_000,
+    const result = spawnSync('bash', [resolve(appRoot, 'scripts/deploy-hosted.sh'), config, 'fixture', image, envFile, data, ...extra], {
+      cwd: root, encoding: 'utf8', timeout: 30_000,
       env: { ...process.env, PATH: `${root}:${process.env.PATH}`, FAKE_LOG: log, ...overrides },
     });
     const calls = (() => { try { return readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); } catch { return []; } })();
     const state = (() => { try { return JSON.parse(readFileSync(log + '.state', 'utf8')); } catch { return {}; } })();
     return { ...result, calls, state };
   }
-  return { run, json, data };
+  return { run, json, data, templateFile };
 }
 const mutations = calls => calls.filter(({ cmd }) => ['apply', 'create', 'patch', 'scale', 'delete'].includes(cmd[0]));
 
@@ -101,6 +104,25 @@ test('requires hosted auth and exact origin before uploading anything', async t 
       assert.equal(mutations(result.calls).length, 0);
     });
   }
+});
+
+test('rejects invalid runtime URLs before uploading any resources', async t => {
+  for (const key of ['ELASTICSEARCH_URL', 'OTEL_EXPORTER_OTLP_ENDPOINT', 'DASH0_RUM_ENDPOINT']) {
+    for (const value of ['not-a-url', 'http://fixture.invalid', 'https://user:password@fixture.invalid']) {
+      await t.test(`${key}: ${value}`, child => {
+        const result = fixture(child, { env: `${key}=${value}\n` }).run();
+        assert.equal(result.status, 1);
+        assert.ok(result.stderr.includes(`Invalid ${key}`));
+        assert.equal(mutations(result.calls).length, 0);
+      });
+    }
+  }
+});
+
+test('accepts trimmed credential-free HTTPS runtime URLs and blank optional telemetry', t => {
+  const result = fixture(t, { env: 'ELASTICSEARCH_URL=" https://fixture.invalid "\nOTEL_EXPORTER_OTLP_ENDPOINT=" "\nDASH0_RUM_ENDPOINT=https://rum.fixture.invalid\n' }).run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.calls.some(call => call.cmd[0] === 'create'));
 });
 
 test('rejects credentials longer than the runtime gate accepts before any mutation', async t => {
@@ -206,4 +228,24 @@ test('creates app:80 only after a fresh candidate is ready', t => {
   assert.ok(createIndex > rolloutIndex);
   assert.equal(result.calls[createIndex].input.metadata.name, 'app');
   assert.equal(result.calls[createIndex].input.metadata.namespace, 'team-fixture');
+});
+
+test('changed pod templates create a separate candidate and failed readiness preserves the serving release', t => {
+  const setup = fixture(t);
+  const first = setup.run();
+  assert.equal(first.status, 0, first.stderr);
+  const serving = Object.values(first.state).find(resource => resource.kind === 'Deployment');
+  const template = JSON.parse(readFileSync(setup.templateFile, 'utf8'));
+  template.spec.template.spec.containers[0].resources.requests.cpu = '300m';
+  writeFileSync(setup.templateFile, JSON.stringify(template));
+
+  const second = setup.run([], { FAKE_FAIL_ROLLOUT: '1' });
+  assert.equal(second.status, 1);
+  const calls = second.calls.slice(first.calls.length);
+  const candidate = calls.find(call => call.cmd[0] === 'apply' && call.input.kind === 'Deployment').input;
+  assert.notEqual(candidate.metadata.name, serving.metadata.name);
+  assert.equal(candidate.spec.template.spec.containers[0].resources.requests.cpu, '300m');
+  assert.deepEqual(second.state[`deployment/${serving.metadata.name}`], serving);
+  assert.deepEqual(second.state['service/app'], first.state['service/app']);
+  assert.ok(!calls.some(call => ['patch', 'create', 'scale', 'delete'].includes(call.cmd[0])));
 });

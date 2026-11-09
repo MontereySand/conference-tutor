@@ -70,6 +70,14 @@ try {
     requireValue(stringData[key].trim(), `Missing ${key}`);
   }
   requireValue(Number.isFinite(Number(stringData.SPEND_CAP_USD)) && Number(stringData.SPEND_CAP_USD) >= 0, 'Invalid SPEND_CAP_USD');
+  // Match lib/env.ts: runtime trims values and requires credential-free HTTPS URLs.
+  for (const key of ['ELASTICSEARCH_URL', 'OTEL_EXPORTER_OTLP_ENDPOINT', 'DASH0_RUM_ENDPOINT']) {
+    const value = stringData[key].trim();
+    if (!value) continue;
+    let url;
+    try { url = new URL(value); } catch { throw new DeploymentError(`Invalid ${key}`); }
+    requireValue(url.protocol === 'https:' && !url.username && !url.password, `Invalid ${key}`);
+  }
   requireValue(stringData.JUDGE_ACCESS_REQUIRED === '1', 'Hosted access requires JUDGE_ACCESS_REQUIRED=1');
   requireValue(stringData.JUDGE_ACCESS_CODE.trim().length >= 16, 'JUDGE_ACCESS_CODE must have at least 16 characters');
   requireValue(stringData.JUDGE_SESSION_SECRET.trim().length >= 32, 'JUDGE_SESSION_SECRET must have at least 32 characters');
@@ -117,7 +125,9 @@ try {
   try { lstatSync(resolve(root, 'transcripts/corrections.json')); paths.add('transcripts/corrections.json'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   const files = [...paths].sort().map(path => ({ path, buffer: path === 'sources.json' ? sourcesBytes : bytes(path) }));
-  const hash = createHash('sha256').update(image).update(JSON.stringify(stringData));
+  const templateBytes = readFileSync('k8s/hosted/deployment.json');
+  const template = JSON.parse(templateBytes.toString('utf8'));
+  const hash = createHash('sha256').update(image).update(JSON.stringify(stringData)).update(templateBytes);
   for (const file of files) hash.update(file.path).update('\0').update(file.buffer);
   const release = hash.digest('hex').slice(0, 16);
   const name = `ct-hosted-${release}`;
@@ -151,7 +161,6 @@ try {
     items.push({ key, path: file.path });
   }
   finish();
-  const template = JSON.parse(readFileSync('k8s/hosted/deployment.json', 'utf8'));
   template.metadata = { name, namespace, labels };
   template.spec.selector = { matchLabels: { [ownerKey]: owner, [releaseKey]: release } };
   template.spec.template.metadata = { labels };
