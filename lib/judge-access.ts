@@ -33,7 +33,8 @@ export function getJudgeAccess(request: Request, cookie?: string, env: AccessEnv
   const url = new URL(request.url);
   const host = request.headers.get("host") ?? url.host;
   if (![required, code, secret, origin].some(Boolean)) {
-    return { mode: loopback(host) && loopback(url.host) ? "local" : "unavailable" };
+    // Standalone may use 0.0.0.0 internally; validate the browser-facing Host instead.
+    return { mode: loopback(host) ? "local" : "unavailable" };
   }
   try {
     const canonical = new URL(origin);

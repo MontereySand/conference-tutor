@@ -38,7 +38,36 @@ test("only completely unconfigured loopback requests have local access", () => {
   }
   expect(getJudgeAccess(new Request("https://outside.example/"), undefined, {})).toEqual({ mode: "unavailable" });
   expect(getJudgeAccess(new Request("http://localhost:3000/", { headers: { host: "outside.example" } }), undefined, {})).toEqual({ mode: "unavailable" });
-  expect(getJudgeAccess(new Request("https://outside.example/", { headers: { host: "127.0.0.1:3000" } }), undefined, {})).toEqual({ mode: "unavailable" });
+  expect(getJudgeAccess(new Request("https://outside.example/", { headers: { host: "127.0.0.1:3000" } }), undefined, {})).toEqual({ mode: "local" });
+});
+
+test("standalone trusts only a canonical loopback Host, falling back to the URL only when absent", () => {
+  for (const host of ["127.0.0.1:3010", "localhost:3010", "[::1]:3010"]) {
+    const request = new Request("http://0.0.0.0:3000/api/ask", { headers: { host } });
+    expect(getJudgeAccess(request, undefined, {})).toEqual({ mode: "local" });
+    expect(getJudgeAccess(request, undefined, { JUDGE_ACCESS_REQUIRED: "1" })).toEqual({ mode: "unavailable" });
+  }
+  for (const host of ["evil.example:3010", "127.0.0.1.evil.example:3010", "127.1:3010", "LOCALHOST:3010", "user@localhost:3010", "localhost:3010/path", "localhost:3010?x=y", "localhost:3010#x", "localhost:bad", ""]) {
+    const request = new Request("http://127.0.0.1:3000/", { headers: { host, "x-forwarded-host": "127.0.0.1:3010" } });
+    expect(getJudgeAccess(request, undefined, {})).toEqual({ mode: "unavailable" });
+  }
+  expect(getJudgeAccess(new Request("http://127.0.0.1:3010/"), undefined, {})).toEqual({ mode: "local" });
+  expect(getJudgeAccess(new Request("http://0.0.0.0:3000/"), undefined, {})).toEqual({ mode: "unavailable" });
+});
+
+test("standalone forwarded local requests reach origin validation rather than setup failure", async () => {
+  for (const key of Object.keys(env)) vi.stubEnv(key, "");
+  const request = (origin?: string) => new Request("http://0.0.0.0:3000/api/access", {
+    method: "POST",
+    headers: { host: "127.0.0.1:3010", "content-type": "application/json", ...(origin ? { origin } : {}) },
+    body: JSON.stringify({ code: "local-fixture" }),
+  });
+  expect((await POST(request("http://127.0.0.1:3010"))).status).toBe(200);
+  for (const origin of ["https://evil.example", undefined]) {
+    const response = await POST(request(origin));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: { stage: "access", code: "origin" } });
+  }
 });
 
 test("required, partial, weak, and noncanonical configuration fails closed even for loopback", () => {
