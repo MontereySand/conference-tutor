@@ -32,18 +32,22 @@ Checks: npm run lint; npm test; npm run build; npm run typecheck. CI uses no pri
 
 Hybrid remains selected: reranking did not improve top-3 support. These are one-pass retrieval measurements, not teaching-quality or native-language accuracy claims.
 
-Translations are machine-generated, not native-reviewed. Untouched sentence timings remain derived. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
+Translations in Hindi, Spanish and Simplified Chinese are machine-generated, not native-reviewed. Untouched sentence timings remain derived; human timing accuracy and review of all 14 minimized cards are not yet established. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
 
-Sponsor evidence and actual verification results will be recorded in docs/sponsor-evidence.md; installation alone is not proof of usage.
+Voice is not included in this build. The original YouTube talk streams directly to the browser; the judge app does not relay original media from a laptop.
+
+See [sponsor evidence](docs/sponsor-evidence.md) for measured Elasticsearch results, actual Gitar review links and explicitly pending Dash0/Radar release proof. Installation, instrumentation and green CI alone do not prove sponsor usage or eligibility.
 
 ## Invited-judge hosting
 
-The Docker target `public-runtime` contains code only. The default final target `runtime` still includes private data for local kind: **never push it**. The manually dispatched `Public runtime image` workflow hardcodes `--target public-runtime` and publishes `ghcr.io/<repository>:sha-<commit>`, without private inputs or secret build arguments. Before dispatching it, inspect an integrated code-only image for absent private data, `.env` files and credentials; confirm the resulting GHCR package is publicly pullable and supports the cluster's architecture. Authentication code (`proxy.ts`) must be integrated before building.
+The Docker target `public-runtime` contains code only. The default final target `runtime` still includes private data for local kind: **never push it**. The manually dispatched `Public runtime image` workflow builds `--target public-runtime` without private inputs or secret build arguments. Before publication, require an image-content assertion that private data, `.git` and `.env` files are absent; confirm anonymous GHCR pull and the event cluster's actual architecture. Record the immutable image digest and full code SHA. These are release gates, not claims that a public image or hosted app is already available.
 
-Run from the prepared app root with Node 26 and kubectl. Discover the actual team and its existing workloads first; supply the downloaded kubeconfig explicitly, never a default context. Save the eight existing core env fields plus `JUDGE_ACCESS_REQUIRED=1`, a generated base64url judge code (at least 16 characters), an independent generated base64url session secret (at least 32), and `PUBLIC_APP_ORIGIN` set to the team's exact HTTPS application origin in the private env file. Each generated value must contain at least eight distinct characters. Do not put the code in a URL or Git.
+Run from the prepared app root with Node 26 and kubectl. Discover the actual team and its existing workloads first; supply the downloaded kubeconfig explicitly, never a default context. Save the eight existing core env fields plus `JUDGE_ACCESS_REQUIRED=1`, a generated base64url judge code (at least 16 characters), an independent generated base64url session secret (at least 32), and `PUBLIC_APP_ORIGIN` set to the team's exact HTTPS application origin in a separate ignored `.env.hosted.local` file. Each generated value must contain at least eight distinct characters. Keep hosted gate settings out of local development's `.env.local`. Never put credentials or the judge code in a URL, public README, video or Git; deliver access only through a judge-private channel.
+
+Hosted validation must match the runtime gate: both the judge code and session secret are limited to 256 characters. During an approved starter replacement, the Service selector must contain only the new release selector, not leftover starter keys. These are release requirements; confirm the integrated deployment implementation before rollout.
 
 ```sh
-bash scripts/deploy-hosted.sh "$HOSTED_KUBECONFIG" "$HOSTED_TEAM" "$HOSTED_IMAGE" ../.env.local data
+bash scripts/deploy-hosted.sh "$HOSTED_KUBECONFIG" "$HOSTED_TEAM" "$HOSTED_IMAGE" ../.env.hosted.local data
 ```
 
 `HOSTED_IMAGE` must be the inspected public GHCR reference pinned as `ghcr.io/owner/image@sha256:<digest>`, not a mutable tag. The script checks the kubeconfig API against the actual team's `vc.cnh.radarhq.io` endpoint before mutation and works only in the **existing** `team-<team>` namespace. It refuses an unmanaged Service `app` by default. Only after inspecting its current selector, owner and image and confirming it is the event starter, append `--replace-starter` to that same command. The candidate must pull and become Ready before Service `app:80` changes; no starter workload is deleted or scaled. Previous deployments owned by this script are retained but scaled to zero after successful cutover.
@@ -58,4 +62,4 @@ Focused deployment checks (inline fixtures/fake kubectl, no cluster or credentia
 node --test k8s/hosted/deploy-hosted.test.mjs
 ```
 
-After actual deployment, verify anonymous requests cannot read private pages/data, login works, `/api/health` reports the intended SHA, and an authenticated real lesson works. These instructions do not assert that hosting or image publication has been executed.
+After actual deployment, verify anonymous page, RSC and API requests cannot read private content; wrong/correct passcodes and secure cookies behave correctly; `/api/health` reports the intended full SHA; foreign/missing origins are rejected; and an authenticated real lesson works. These instructions do not assert that hosting or image publication has been executed. No hosted URL or passcode is published here while that proof is pending.
