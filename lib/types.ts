@@ -1,0 +1,9 @@
+export type Lang = "en" | "hi" | "es" | "zh";
+export type Sentence = { id: string; startMs: number; endMs: number; text: string; raw: string; chapter: number; timing: "derived" | "reviewed" };
+export type Transcript = { sourceId: string; lang: Lang; durationMs: number; chapters: { startMs: number; title: string }[]; sentences: Sentence[]; machineTranslated: boolean; reviewed: boolean };
+export type Chunk = { chunkId: string; sourceId: string; kind: "talk" | "reference"; title: string; url: string; chapter?: string; startMs?: number; endMs?: number; sentenceIds?: string[]; text: string; text_hi?: string; text_es?: string; text_zh?: string };
+export type ProfileCard = { id: string; name: string; role: string; anchors: { id: string; text: string; source: "LinkedIn" | "Public web" | "Event report" | "Event page"; tags: string[] }[] };
+export type Concept = { id: string; startMs: number; endMs: number; title: Record<Lang, string>; suggested: Record<Lang, string> };
+export type TurnKey = { sourceId: string; profileId: string | null; lang: Lang; version: number; turnId: string };
+export type Corrections = { depth: "simple" | "standard" | "deep"; noAnalogy: boolean };
+export type HistoryTurn = { question: string; answer: string };
