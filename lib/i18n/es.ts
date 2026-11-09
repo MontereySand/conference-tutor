@@ -21,7 +21,7 @@ export const es: Messages = {
   transcriptDefinePrompt: "Define y explica este fragmento:",
   transcriptSimplify: "Simplificar",
   transcriptSimplifyPrompt: "Explica este fragmento de forma más sencilla:",
-  transcriptAddDump: "Añadir a Dump",
+  transcriptAddDump: "Añadir a Apuntes",
   transcriptEdit: "Editar anotación del subtítulo",
   transcriptCopy: "Copiar",
   transcriptCopyFailed: "No se pudo copiar al portapapeles. Selecciona el texto y cópialo manualmente.",

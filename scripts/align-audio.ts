@@ -1,9 +1,11 @@
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import OpenAI from "openai";
 import { z } from "zod";
 import { ChunkSchema, TranscriptSchema } from "../lib/data-schema.ts";
+import { costOf, getBudget } from "../lib/budget.ts";
 import type { Sentence, Transcript, WordTiming } from "../lib/types.ts";
 
 const output = resolve("../evidence/processed-media/alignment");
@@ -34,9 +36,13 @@ async function transcribe() {
   if (statSync(audio).size <= 0 || statSync(audio).size >= 25_000_000) throw new Error("Audio outside supported upload size");
   const file = resolve(output, "asr.json");
   if (existsSync(file)) throw new Error("ASR output already exists; preserve it rather than repeat the paid request");
+  const seconds = z.coerce.number().positive().parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", audio], { encoding: "utf8", timeout: 30000 }).trim());
+  const budget = getBudget();
+  const hold = budget.admit("transcription", costOf("transcription", { seconds: Math.ceil(seconds) }));
   const client = new OpenAI({ maxRetries: 0, timeout: 600_000 });
   const result = await client.audio.transcriptions.create({ file: createReadStream(audio), model: "whisper-1", language: "en", response_format: "verbose_json", timestamp_granularities: ["word", "segment"] });
   Asr.parse(result);
+  budget.record(hold, { seconds: result.duration });
   save("asr.json", result);
   console.log("Private timestamped ASR saved.");
 }

@@ -71,7 +71,14 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
  function returnTalk(){surface.current?.focus({preventScroll:true});}
  function seek(ms:number){player.current?.seekTo(ms);surface.current?.focus({preventScroll:true});}
  function explain(){if(seeking.current)return;const ms=player.current?.getTimeMs();if(ms===undefined||!Number.isFinite(ms))return;const concept=concepts.find(concept=>ms>=concept.startMs&&ms<concept.endMs);askQuestion(concept?.suggested[current.current.lang]??t(current.current.lang).explainMoment);}
- function dump(selection:string){const addition=selection.trim();if(!addition)return;const draft=current.current.question;update({type:"question",question:(draft+(draft.trim()?"\n\n":"")+addition).slice(0,2000)});requestAnimationFrame(()=>input.current?.focus());}
+ function dump(selection:string){
+  const addition=selection.trim();if(!addition)return;
+  const draft=current.current.question;
+  update({type:"question",question:(draft+(draft.trim()?"\n\n":"")+addition).slice(0,2000)});
+  const focus=()=>requestAnimationFrame(()=>input.current?.focus());
+  const dialog=document.querySelector<HTMLDialogElement>("dialog[open]");
+  if(dialog)dialog.addEventListener("close",focus,{once:true});else focus();
+ }
  const pending=session.pending!==null||session.queuedRequest!==null;
  return <div ref={surface} tabIndex={0} className={styles.surface} lang={htmlLang[session.lang]} aria-label={text.watch} aria-keyshortcuts="Space / ArrowRight ArrowDown ArrowLeft ArrowUp PageDown PageUp" onKeyDown={event=>{
   if(event.defaultPrevented||event.nativeEvent.isComposing||event.repeat||event.metaKey||event.ctrlKey||event.altKey||event.shiftKey||event.target!==event.currentTarget)return;

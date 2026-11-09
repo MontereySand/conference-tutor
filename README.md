@@ -25,6 +25,8 @@ Node 26, npm, privately prepared data/ and .env.local are required for the full 
 
 Checks: npm run lint; npm test; npm run build; npm run typecheck. CI uses no private data or secrets.
 
+Private audio preparation requires FFmpeg/ffprobe. `scripts/align-audio.ts transcribe` measures the actual audio before taking a spending hold, disables retries, settles the returned duration, and refuses to overwrite existing ASR output. Failed calls retain their hold. The Whisper ledger rate follows its documented [$0.006/minute list price](https://developers.openai.com/api/docs/models/whisper-1); this is an admission estimate, not a provider invoice or billing guarantee. The existing prepared transcription is reused without another paid request.
+
 ## Retrieval verified
 
 71 passages use Jina `.jina-embeddings-v5-text-small` through Elasticsearch `semantic_text`. A historical one-pass experiment used eight invented queries covering two mechanisms in English, Hindi, Spanish and Simplified Chinese; the current product supports English and Spanish only.

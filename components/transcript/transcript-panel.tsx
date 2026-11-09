@@ -92,14 +92,14 @@ export function TranscriptPanel({ transcript, english, lang, currentMs, concepts
     <small className={styles.selectionHint}>{text.transcriptSelectionHint}</small>
     {clipboardError && <p className={styles.error} role="status">{text.transcriptCopyFailed}</p>}
     <div ref={panel} className={styles.scroll} tabIndex={0} aria-label={text.transcript} onWheel={() => setFollow(false)} onTouchMove={() => setFollow(false)} onPointerDown={() => { pointer.current = true; }} onPointerUp={() => { pointer.current = false; }} onPointerCancel={() => { pointer.current = false; }} onScroll={() => { if (pointer.current) setFollow(false); }} onKeyDown={event => { if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) setFollow(false); }}>
-      <ContextMenu label={text.transcriptActions} presentation="adaptive" items={actions(target)} onContextMenu={event => {
+      <ContextMenu label={text.transcriptActions} presentation="adaptive" items={actions(target)} onOpenChange={open => { if (open) setFollow(false); }} onContextMenu={event => {
         const element = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-sentence-id]") : null;
         const sentence = transcript.sentences.find(item => item.id === element?.dataset.sentenceId);
         if (sentence) choose(sentence, false); else setTarget(null);
       }} onTouchStart={event => {
         const element = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-sentence-id]") : null;
         const sentence = transcript.sentences.find(item => item.id === element?.dataset.sentenceId);
-        if (sentence) choose(sentence, false);
+        setTarget(sentence ? { sentence, selection: boundedSelection(annotations[keyFor(sentence)] ?? sentence.text) } : null);
       }}>
         {transcript.sentences.map((sentence, i) => {
           const key = keyFor(sentence), annotation = annotations[key], isActive = i === index;
