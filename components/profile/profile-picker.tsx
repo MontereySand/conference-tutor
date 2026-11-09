@@ -1,16 +1,44 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import type { Lang, ProfileCard } from "@/lib/types";
-import { t } from "@/lib/i18n";
+import { htmlLang, t } from "@/lib/i18n";
+
 export function ProfilePicker({cards,profileId,lang,onChange}:{cards:ProfileCard[];profileId:string|null;lang:Lang;onChange:(id:string|null)=>void}) {
   const [open,setOpen]=useState(false), [details,setDetails]=useState(false);
   const text=t(lang), card=cards.find(card=>card.id===profileId);
   const categories={"LinkedIn":text.sourceLinkedIn,"Public web":text.sourcePublic,"Event report":text.sourceReport,"Event page":text.sourceEvent};
-  return <div className="profile-controls"><Button variant="outline" onClick={()=>{setDetails(false);setOpen(true);}}>{text.tunedFor}: {card?.name??text.general}</Button><Button variant="ghost" onClick={()=>{setDetails(true);setOpen(true);}}>{text.whatUsed}</Button>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent showCloseButton={false} className="profile-dialog"><DialogTitle>{details?text.whatUsed:text.chooseProfile}</DialogTitle><DialogDescription>{text.profileNote}</DialogDescription>
-    {details ? <div>{card ? <><h3>{card.name}</h3><p>{card.role}</p><ul className="anchor-list">{card.anchors.map(anchor=><li key={anchor.id}><p>{anchor.text}</p><small>{categories[anchor.source]}</small></li>)}</ul></> : <p>{text.general}</p>}</div> : <div className="profile-grid"><Button variant={profileId===null?"default":"outline"} onClick={()=>{onChange(null);setOpen(false);}}>{text.general}</Button>{cards.map(item=><Button className="profile-option" key={item.id} variant={item.id===profileId?"default":"outline"} onClick={()=>{onChange(item.id);setOpen(false);}}><strong>{item.name}</strong><span>{item.role}</span></Button>)}</div>}
-    <DialogClose render={<Button variant="outline"/>}>{text.close}</DialogClose></DialogContent></Dialog>
+
+  return <div className="profile-controls">
+    <Button variant="secondary" label={`${text.tunedFor}: ${card?.name??text.general}`} aria-haspopup="dialog" onClick={()=>{setDetails(false);setOpen(true);}}/>
+    <Button variant="ghost" label={text.whatUsed} aria-haspopup="dialog" onClick={()=>{setDetails(true);setOpen(true);}}/>
+    <Dialog isOpen={open} onOpenChange={setOpen} className="profile-dialog" width="56rem" maxHeight="85dvh">
+      <div lang={htmlLang[lang]}>
+        <DialogHeader className="profile-dialog-header" title={details?text.whatUsed:text.chooseProfile} subtitle={text.profileNote} onOpenChange={setOpen}/>
+        {details
+          ? <section className="profile-details">
+              <h3>{card?.name??text.general}</h3>
+              {card
+                ? <><p>{card.role}</p><ul className="anchor-list">
+                    {card.anchors.map(anchor=><li key={anchor.id}>
+                      <p>{anchor.text}</p><small>{categories[anchor.source]}</small>
+                    </li>)}
+                  </ul></>
+                : <p>{text.generalProfileNote}</p>}
+            </section>
+          : <div className="profile-grid" role="group" aria-label={text.chooseProfile}>
+              <Button className="profile-option" width="100%" variant={profileId===null?"primary":"secondary"} label={`${text.general}: ${text.generalProfileNote}`} aria-pressed={profileId===null} onClick={()=>{onChange(null);setOpen(false);}}>
+                <span className="profile-option-content"><strong>{text.general}</strong><span>{text.generalProfileNote}</span></span>
+              </Button>
+              {cards.map(item=><Button className="profile-option" width="100%" key={item.id} variant={item.id===profileId?"primary":"secondary"} label={`${item.name}: ${item.role}`} aria-pressed={item.id===profileId} onClick={()=>{onChange(item.id);setOpen(false);}}>
+                <span className="profile-option-content"><strong>{item.name}</strong><span>{item.role}</span></span>
+              </Button>)}
+            </div>}
+        <div className="profile-dialog-footer">
+          <Button variant="secondary" label={text.close} onClick={()=>setOpen(false)}/>
+        </div>
+      </div>
+    </Dialog>
   </div>;
 }

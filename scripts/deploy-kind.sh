@@ -11,10 +11,10 @@ done
 
 export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
 export KIND_EXPERIMENTAL_PROVIDER=docker
-sha="$(git rev-parse --short HEAD)"
+sha="$(git rev-parse HEAD)"
 image="conference-tutor:$sha"
 
-docker build --build-arg "GIT_SHA=$sha" -t "$image" .
+docker build --target runtime --build-arg "GIT_SHA=$sha" -t "$image" .
 kind load docker-image "$image" --name cnh
 kubectl --context kind-cnh apply -f k8s/namespace.yaml
 
@@ -45,16 +45,16 @@ kubectl --context kind-cnh apply -f k8s/service.yaml
 kubectl --context kind-cnh -n conference-tutor rollout status deployment/conference-tutor --timeout=180s
 
 printf '\nDeployed local image %s (health SHA must equal %s). No image was pushed.\n' "$image" "$sha"
-if listeners="$(lsof -nP -iTCP:3000 -sTCP:LISTEN)"; then
-  printf '\nPort 3000 has an existing listener; have its owner stop it before forwarding. No process was stopped:\n%s\n' "$listeners"
+if listeners="$(lsof -nP -iTCP:3010 -sTCP:LISTEN)"; then
+  printf '\nPort 3010 has an existing listener; have its owner stop it before forwarding. No process was stopped:\n%s\n' "$listeners"
 else
   status=$?
   if [[ "$status" -ne 1 ]]; then
-    printf 'Could not inspect port 3000 (lsof exit %s); inspect it before forwarding.\n' "$status" >&2
+    printf 'Could not inspect port 3010 (lsof exit %s); inspect it before forwarding.\n' "$status" >&2
   fi
 fi
 printf '\nNext: start this foreground command as a named tool service (do not background it):\n'
-printf '%s\n' 'kubectl --context kind-cnh -n conference-tutor port-forward --address 127.0.0.1 svc/conference-tutor 3000:80'
+printf '%s\n' 'kubectl --context kind-cnh -n conference-tutor port-forward --address 127.0.0.1 svc/conference-tutor 3010:80'
 printf '\nThen check the returned SHA is %s:\n' "$sha"
-printf '%s\n' 'curl --fail --silent --show-error http://127.0.0.1:3000/api/health'
+printf '%s\n' 'curl --fail --silent --show-error http://127.0.0.1:3010/api/health'
 printf '\nThe writable emptyDir ledger resets on pod replacement; it is not a provider billing cap.\n'

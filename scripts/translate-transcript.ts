@@ -8,7 +8,7 @@ import type { Lang, Transcript } from "../lib/types.ts";
 import { ChunkSchema, TranscriptSchema } from "../lib/data-schema.ts";
 
 const Output = z.object({ items: z.array(z.object({ id: z.string(), text: z.string() })) });
-const targets = { hi: "Hindi in Devanagari; keep common English technical terms", es: "neutral Latin-American Spanish", zh: "Mandarin in Simplified Chinese" };
+const targets = { es: "neutral Latin-American Spanish" };
 export function validateTranslation(source: { id: string; text: string }[], items: { id: string; text: string }[]): void {
   if (items.length !== source.length || new Set(items.map((s) => s.id)).size !== source.length) throw new Error("Translation id count mismatch");
   for (const s of source) {
@@ -26,8 +26,8 @@ async function main() {
   const client = new OpenAI({ maxRetries: 0, timeout: 120000 });
   const english = TranscriptSchema.parse(JSON.parse(readFileSync(resolve("data/transcripts/omnigent.en.json"), "utf8")));
   const args = process.argv.slice(2);
-  const languages = (args[0] ? [args[0]] : ["hi", "es", "zh"]) as Exclude<Lang, "en">[];
-  if (languages.some((l) => !(l in targets))) throw new Error("Expected hi, es, or zh");
+  const languages = (args[0] ? [args[0]] : ["es"]) as Exclude<Lang, "en">[];
+  if (languages.some((l) => l !== "es")) throw new Error("Expected es");
   const onlyBatch = args[1] === undefined ? null : Number(args[1]);
   if (onlyBatch !== null && (!Number.isInteger(onlyBatch) || onlyBatch < 0)) throw new Error("Batch must be a nonnegative integer");
   for (const lang of languages) {

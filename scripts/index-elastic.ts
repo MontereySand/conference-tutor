@@ -19,15 +19,15 @@ async function main() {
   if (!inferenceId) throw new Error("Jina embedding endpoint unavailable; no provider substitution");
   const name = "ct-passages-v1";
   if (!(await client.indices.exists({ index: name }))) await client.indices.create({ index: name, mappings: { properties: {
-    chunk_id: { type: "keyword" }, source_id: { type: "keyword" }, kind: { type: "keyword" }, chapter: { type: "keyword" }, url: { type: "keyword", index: false }, start_ms: { type: "long" }, end_ms: { type: "long" }, sentence_ids: { type: "keyword" }, title: { type: "text" }, text: { type: "text", analyzer: "english" }, text_hi: { type: "text", analyzer: "hindi" }, text_es: { type: "text", analyzer: "spanish" }, text_zh: { type: "text", analyzer: "cjk" }, text_semantic: { type: "semantic_text", inference_id: inferenceId },
+    chunk_id: { type: "keyword" }, source_id: { type: "keyword" }, kind: { type: "keyword" }, chapter: { type: "keyword" }, url: { type: "keyword", index: false }, start_ms: { type: "long" }, end_ms: { type: "long" }, sentence_ids: { type: "keyword" }, title: { type: "text" }, text: { type: "text", analyzer: "english" }, text_es: { type: "text", analyzer: "spanish" }, text_semantic: { type: "semantic_text", inference_id: inferenceId },
   } } });
   const talk = z.array(ChunkSchema).parse(JSON.parse(readFileSync(resolve("data/index/chunks.json"), "utf8")));
   const referenceDir = resolve("data/references");
   const references = readdirSync(referenceDir).filter((f) => f.endsWith(".json")).flatMap((f) => z.array(ChunkSchema).parse(JSON.parse(readFileSync(resolve(referenceDir, f), "utf8"))));
   const chunks = [...talk, ...references];
   if (new Set(chunks.map((c) => c.chunkId)).size !== chunks.length) throw new Error("Duplicate chunk ids");
-  for (const chunk of talk) for (const lang of ["hi", "es", "zh"] as const) if (!chunk[`text_${lang}`]?.trim()) throw new Error(`Missing ${lang} translation: ${chunk.chunkId}`);
-  const operations = chunks.flatMap((c) => [{ index: { _index: name, _id: c.chunkId } }, { chunk_id: c.chunkId, source_id: c.sourceId, kind: c.kind, title: c.title, url: c.url, chapter: c.chapter, start_ms: c.startMs, end_ms: c.endMs, sentence_ids: c.sentenceIds, text: c.text, text_hi: c.text_hi, text_es: c.text_es, text_zh: c.text_zh, text_semantic: c.text }]);
+  for (const chunk of talk) if (!chunk.text_es?.trim()) throw new Error(`Missing es translation: ${chunk.chunkId}`);
+  const operations = chunks.flatMap((c) => [{ index: { _index: name, _id: c.chunkId } }, { chunk_id: c.chunkId, source_id: c.sourceId, kind: c.kind, title: c.title, url: c.url, chapter: c.chapter, start_ms: c.startMs, end_ms: c.endMs, sentence_ids: c.sentenceIds, text: c.text, text_es: c.text_es, text_semantic: c.text }]);
   const response = await client.bulk({ operations, refresh: true });
   if (response.errors) {
     const failures = response.items.filter((i) => (i.index?.status ?? 200) >= 300).map((i) => ({ id: i.index?._id, status: i.index?.status, type: i.index?.error?.type }));

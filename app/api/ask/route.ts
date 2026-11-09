@@ -12,8 +12,9 @@ import { LessonSchema, type CitationSource } from "@/lib/lesson/schema";
 import { LESSON_INSTRUCTIONS, lessonInput } from "@/lib/lesson/prompt";
 import { validateLesson } from "@/lib/lesson/validate";
 import { decideIntent, type Intent } from "@/lib/decide";
+import { correctionsForIntent } from "@/lib/session/corrections";
 import { withSpan, recordCost, recordLesson } from "@/lib/telemetry";
-import type { TurnKey, Corrections } from "@/lib/types";
+import type { TurnKey } from "@/lib/types";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const started = performance.now(); const requestId = randomUUID();
@@ -35,19 +36,16 @@ export async function POST(request: Request) {
     const anchor = active ? getChunks().find((c) => c.kind === "talk" && c.sourceId === source.id && c.sentenceIds?.includes(active.id)) : undefined;
     const hold = getBudget().admit("lesson", 0.01); admitted = true;
     stage = "retrieve";
-    const intentPromise: Promise<Intent> = input.history.length ? decideIntent(input.question, turnKey.lang, request.signal).catch((error: unknown) => { if (request.signal.aborted) throw error; return "new_question"; }) : Promise.resolve("new_question");
+    const intentPromise: Promise<Intent> = input.requestKind === "question" && input.history.length ? decideIntent(input.question, turnKey.lang, request.signal).catch((error: unknown) => { if (request.signal.aborted) throw error; return "new_question"; }) : Promise.resolve("new_question");
     const [retrieved, intent] = await Promise.all([
       withSpan("ct.retrieve", { lang: turnKey.lang, "ct.request_id": requestId, mode: evidenceConfig.appMode }, () => searchPrepared(elastic, { question: input.question + (active ? "\n" + active.text : ""), lang: turnKey!.lang, sourceIds, mode: evidenceConfig.appMode, nativeRrf: evidenceConfig.nativeRrf, size: 8, signal: request.signal })),
       intentPromise,
     ]);
     const evidence = [...new Map([...(anchor ? [anchor] : []), ...retrieved].filter((c) => sourceIds.includes(c.sourceId)).map((c) => [c.chunkId, c])).values()];
-    const corrections: Corrections = { ...input.corrections };
-    if (intent === "analogy_unhelpful") corrections.noAnalogy = true;
-    if (intent === "simpler") corrections.depth = "simple";
-    if (intent === "deeper") corrections.depth = "deep";
+    const corrections = correctionsForIntent(input.corrections, intent, input.requestKind);
     stage = "generate";
     const result = await withSpan("ct.generate", { lang: turnKey.lang, model: "gpt-6-luna", "ct.request_id": requestId, "ct.requested_tier": "fast", "ct.profile_mode": card ? "profile" : "general" }, async (span) => {
-      const response = await openai.responses.parse({ model: "gpt-6-luna", service_tier: "fast", store: false, instructions: LESSON_INSTRUCTIONS, prompt_cache_key: "ct-lesson-v1", input: lessonInput({ question: input.question, lang: turnKey!.lang, context: activeIndex < 0 ? [] : transcript.sentences.slice(Math.max(0, activeIndex - 3), activeIndex + 4), evidence, card, corrections, history: input.history, intent }), text: { format: zodTextFormat(LessonSchema, "lesson") }, max_output_tokens: 1200 }, { signal: request.signal });
+      const response = await openai.responses.parse({ model: "gpt-6-luna", service_tier: "fast", store: false, instructions: LESSON_INSTRUCTIONS[turnKey!.lang], prompt_cache_key: "ct-lesson-v1", input: lessonInput({ question: input.question, context: activeIndex < 0 ? [] : transcript.sentences.slice(Math.max(0, activeIndex - 3), activeIndex + 4), evidence, card, corrections, history: input.history, intent }), text: { format: zodTextFormat(LessonSchema, "lesson") }, max_output_tokens: 1200 }, { signal: request.signal });
       span.setAttributes({ "ct.served_tier": response.service_tier ?? "unknown", "ct.input_tokens": response.usage?.input_tokens ?? 0, "ct.output_tokens": response.usage?.output_tokens ?? 0 });
       return response;
     });

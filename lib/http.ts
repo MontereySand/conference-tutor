@@ -7,17 +7,20 @@ export function requireSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   const url = new URL(request.url);
   const configured = process.env.PUBLIC_APP_ORIGIN?.trim();
-  let allowed: string[];
+  let allowed: string;
   if (configured) {
     let publicUrl: URL;
     try { publicUrl = new URL(configured); } catch { throw new HttpError(503, "setup"); }
     if (publicUrl.protocol !== "https:" || publicUrl.origin !== configured || publicUrl.username || publicUrl.password) throw new HttpError(503, "setup");
-    allowed = [configured];
+    allowed = configured;
   } else {
-    const port = url.port ? ":" + url.port : "";
-    allowed = ["localhost", "127.0.0.1", "[::1]"].map((host) => url.protocol + "//" + host + port);
+    const host = request.headers.get("host") ?? url.host;
+    let localUrl: URL;
+    try { localUrl = new URL(`${url.protocol}//${host}`); } catch { throw new HttpError(403, "origin"); }
+    if (!["http:", "https:"].includes(localUrl.protocol) || !["localhost", "127.0.0.1", "[::1]"].includes(localUrl.hostname) || localUrl.host !== host || localUrl.username || localUrl.password || localUrl.pathname !== "/" || localUrl.search || localUrl.hash) throw new HttpError(403, "origin");
+    allowed = localUrl.origin;
   }
-  if (!origin || !allowed.includes(origin)) throw new HttpError(403, "origin");
+  if (!origin || origin !== allowed) throw new HttpError(403, "origin");
 }
 export async function parseJson<T>(request: Request, schema: z.ZodType<T>, maxBytes = 32000): Promise<T> {
   const reader = request.body?.getReader();

@@ -4,6 +4,7 @@ import { resolve, sep } from "node:path";
 import { z } from "zod";
 import { SourceSchema, TranscriptSchema, ChunkSchema, ProfileCardSchema, ConceptSchema, ElasticEvidenceSchema } from "./data-schema";
 import type { Lang, Transcript } from "./types";
+import { applyTimingReview } from "./timing";
 const root = resolve(process.cwd(), "data");
 const cache = new Map<string, unknown>();
 export class PreparedDataMissing extends Error {
@@ -28,19 +29,13 @@ export function getTranscript(sourceId: string, lang: Lang): Transcript | null {
   if (!source?.ready || !source.transcriptPath) return null;
   const relative = source.transcriptPath.replace(/\.en\.json$/, "." + lang + ".json");
   if (lang !== "en" && !existsSync(preparedPath(relative))) return null;
-  const transcript = structuredClone(load(relative, TranscriptSchema));
+  const transcript = load(relative, TranscriptSchema);
   const review = preparedPath("transcripts/" + source.id + ".review.json");
   if (existsSync(review)) {
     const { starts } = z.object({ starts: z.record(z.string(), z.number().int().nonnegative()) }).parse(JSON.parse(readFileSync(review, "utf8")));
-    for (const [i, sentence] of transcript.sentences.entries()) {
-      const start = starts[sentence.id];
-      if (start === undefined) continue;
-      sentence.startMs = start; sentence.timing = "reviewed";
-      if (i > 0) transcript.sentences[i - 1]!.endMs = start;
-    }
-    transcript.reviewed = transcript.sentences.every((s) => s.timing === "reviewed");
+    return applyTimingReview(transcript, starts);
   }
-  return TranscriptSchema.parse(transcript);
+  return applyTimingReview(transcript, {});
 }
 export function getChunks() {
   const chunks = [...load("index/chunks.json", z.array(ChunkSchema))];
