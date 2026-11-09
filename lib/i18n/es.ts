@@ -1,5 +1,7 @@
 import type { Messages } from "./en";
 export const es: Messages = {
+  checkUnderstanding: "Comprueba lo que has entendido",
+  practiceWhy: "¿Por qué? / Fuentes de apoyo",
   skipContent: "Saltar al contenido",
   answerHeading: "Respuesta directa",
   talkCitations: "De esta charla",

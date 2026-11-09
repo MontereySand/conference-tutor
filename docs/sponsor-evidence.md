@@ -6,7 +6,7 @@ Status: November 9, 2026. This records observed results, not a claim that every 
 
 The prepared Elasticsearch Serverless 9.7.0 index contains 71 passages: 63 talk chunks and eight reference chunks. It uses Jina `.jina-embeddings-v5-text-small` through `semantic_text`, with native reciprocal rank fusion (RRF). Elasticsearch is the app's retrieval layer, not an unused integration.
 
-The existing one-pass experiment used eight invented queries: two mechanism questions in English, Hindi, Spanish and Simplified Chinese. Success means a supporting talk passage from the expected time window appeared in the top three; it is not a measure of answer quality or native-language fluency.
+The historical one-pass experiment used eight invented queries: two mechanism questions in English, Hindi, Spanish and Simplified Chinese. The current product supports only English and Spanish. Success means a supporting talk passage from the expected time window appeared in the top three; it is not a measure of answer quality or native-language fluency.
 
 | Retrieval mode | Supporting window in top 3 | Median retrieval latency |
 | --- | ---: | ---: |
@@ -17,7 +17,7 @@ The existing one-pass experiment used eight invented queries: two mechanism ques
 
 Hybrid is the recorded app mode: reranking did not improve top-three support in this small experiment. These are previous measurements, not a fresh run or end-to-end generation latency. The private prepared inputs are required to reproduce them; a public clone alone cannot reproduce the corpus results.
 
-Public implementation/method: [index preparation](../scripts/index-elastic.ts), [retrieval modes](../lib/search.ts), and [invented queries, support predicate and aggregation](../scripts/check-retrieval.ts). Detailed measurement records remain in private `data/evidence/retrieval.json` and `data/evidence/elastic.json`; neither is a public dataset. No retrieval rerun was performed for this documentation update.
+Public implementation/method: [index preparation](../scripts/index-elastic.ts) and [retrieval modes](../lib/search.ts). The [current check](../scripts/check-retrieval.ts) uses four English and Spanish queries; its results have not been measured. The earlier eight-query check and detailed measurement records remain in the prior code revision and private `data/evidence/retrieval.json` and `data/evidence/elastic.json`; neither evidence file is a public dataset. No retrieval rerun was performed for this documentation update.
 
 ## Gitar — actual feature reviews and addressed findings
 
@@ -46,7 +46,7 @@ Still pending: the deployed app's full SHA and readiness, before/after Checks co
 ## Release and review limitations
 
 - The event judge environment expires November 13, 2026. The intended deployment is passcode-gated, with a public code-only image and privately mounted prepared inputs. Publication, anonymous image pull and real HTTPS access checks remain pending.
-- Translations are machine-generated and not native-reviewed. Unreviewed sentence intervals remain derived; the human timing target has not been established. Review of all 14 minimized cards is also pending.
+- Spanish translations are machine-generated and not native-reviewed. Unreviewed sentence intervals remain derived; the human timing target has not been established. Review of all 14 minimized cards is also pending.
 - Voice is not included in this build. No physical presenter-remote verification is claimed.
 - Screenshots/video require human review and approval before publication. Original source media, raw source passages, private packets and access credentials do not belong in the public evidence package.
 - Sponsor eligibility, final video approval and platform submission are not established by this page.

@@ -1,7 +1,7 @@
 "use client";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@astryxdesign/core/Button";
+import { Selector } from "@astryxdesign/core/Selector";
 import { t, timestamp } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
 import { createPlayerPosition, observePlayerClock, type PlayerPosition } from "@/lib/clock";
@@ -53,5 +53,5 @@ export const YouTubePlayer=forwardRef<PlayerHandle,{videoId:string;initialMs:num
     return ()=>{disposed=true;stopClock?.();position.current!.dispose();readyRef.current=false;player.current?.destroy();player.current=null;};
   },[videoId,sample]);
   const text=t(lang);
-  return <section aria-label={text.player} className="player-block"><div className="video-shell"><div ref={host} className="video-host"/>{!ready&&!failed&&<p className="player-message" role="status">{text.playerLoading}</p>}</div>{failed&&<p role="alert">{text.playerError}</p>}<div className="player-controls"><Button variant="outline" disabled={!ready} onClick={()=>{if(state===1)player.current?.pauseVideo();else player.current?.playVideo();}}>{state===1?text.pause:text.play}</Button><span className="time-readout">{timestamp(current)}</span><Select value={String(rate)} onValueChange={value=>{if(value&&ready)player.current?.setPlaybackRate(Number(value));}}><SelectTrigger aria-label={text.playbackRate} disabled={!ready}><SelectValue>{rate}×</SelectValue></SelectTrigger><SelectContent>{rates.map(value=><SelectItem value={String(value)} key={value}>{value}×</SelectItem>)}</SelectContent></Select></div></section>;
+  return <section aria-label={text.player} className="player-block"><div className="video-shell"><div ref={host} className="video-host"/>{!ready&&!failed&&<p className="player-message" role="status">{text.playerLoading}</p>}</div>{failed&&<p role="alert">{text.playerError}</p>}<div className="player-controls"><Button variant="secondary" label={state===1?text.pause:text.play} isDisabled={!ready} onClick={()=>{if(state===1)player.current?.pauseVideo();else player.current?.playVideo();}}/><span className="time-readout">{timestamp(current)}</span><Selector label={text.playbackRate} isLabelHidden variant="secondary" isDisabled={!ready} value={String(rate)} onChange={value=>{if(ready)player.current?.setPlaybackRate(Number(value));}} options={rates.map(value=>({value:String(value),label:`${value}×`}))}/></div></section>;
 });

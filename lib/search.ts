@@ -2,9 +2,9 @@ import type { Client, estypes } from "@elastic/elasticsearch";
 import type { Chunk, Lang } from "./types.ts";
 import { IndexedChunkSchema } from "./data-schema.ts";
 export type SearchMode = "lexical" | "semantic" | "hybrid" | "rerank";
-export type IndexedChunk = { chunk_id: string; source_id: string; kind: "talk" | "reference"; title: string; url: string; chapter?: string; start_ms?: number; end_ms?: number; sentence_ids?: string[]; text: string; text_hi?: string; text_es?: string; text_zh?: string };
+export type IndexedChunk = { chunk_id: string; source_id: string; kind: "talk" | "reference"; title: string; url: string; chapter?: string; start_ms?: number; end_ms?: number; sentence_ids?: string[]; text: string; text_es?: string };
 export function toChunk(row: IndexedChunk): Chunk {
-  return { chunkId: row.chunk_id, sourceId: row.source_id, kind: row.kind, title: row.title, url: row.url, chapter: row.chapter, startMs: row.start_ms, endMs: row.end_ms, sentenceIds: row.sentence_ids, text: row.text, text_hi: row.text_hi, text_es: row.text_es, text_zh: row.text_zh };
+  return { chunkId: row.chunk_id, sourceId: row.source_id, kind: row.kind, title: row.title, url: row.url, chapter: row.chapter, startMs: row.start_ms, endMs: row.end_ms, sentenceIds: row.sentence_ids, text: row.text, text_es: row.text_es };
 }
 export function fuseRanks<T extends { chunkId: string }>(lists: T[][], size = 8): T[] {
   const scored = new Map<string, { item: T; score: number; order: number }>();

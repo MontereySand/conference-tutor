@@ -1,4 +1,6 @@
 export const en = {
+  checkUnderstanding: "Check your understanding",
+  practiceWhy: "Why? / Source support",
   skipContent: "Skip to content",
   answerHeading: "Direct answer",
   talkCitations: "From this talk",

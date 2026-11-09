@@ -21,7 +21,7 @@ export async function POST(request:Request){
    let starts:Record<string,number>={};
    try{starts=z.object({starts:z.record(z.string(),z.number().int().nonnegative())}).parse(JSON.parse(await readFile(path,"utf8"))).starts;}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
    starts[input.sentenceId]=input.startMs;
-   for(const lang of ["en","hi","es","zh"] as const){
+   for(const lang of ["en","es"] as const){
     const localized=lang==="en"?transcript:getTranscript(source.id,lang);
     if(localized)try{applyTimingReview(localized,starts);}catch{throw new HttpError(400,"invalid");}
    }

@@ -117,7 +117,7 @@ try {
     if (source.ready) {
       const transcript = source.transcriptPath?.replace(/^data\//, '');
       requireValue(transcript === `transcripts/${source.id}.en.json`, 'Invalid ready-source transcript path');
-      for (const lang of ['en', 'hi', 'es', 'zh']) paths.add(`transcripts/${source.id}.${lang}.json`);
+      for (const lang of ['en', 'es']) paths.add(`transcripts/${source.id}.${lang}.json`);
       const review = `transcripts/${source.id}.review.json`;
       try { lstatSync(resolve(root, review)); paths.add(review); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     }

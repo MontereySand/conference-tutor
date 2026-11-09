@@ -25,7 +25,8 @@ function fixture(t, options = {}) {
   json('sources.json', [{ id: 'fixture', ready: true,
     transcriptPath: 'data/transcripts/fixture.en.json', conceptsPath: 'data/concepts/fixture.json',
     referencePaths: ['data/references/fixture.json'] }]);
-  for (const lang of ['en', 'hi', 'es', 'zh']) json(`transcripts/fixture.${lang}.json`, options.large ? 'x'.repeat(240_000) : []);
+  for (const lang of ['en', 'es']) json(`transcripts/fixture.${lang}.json`, options.large ? 'x'.repeat(380_000) : []);
+  for (const lang of ['hi', 'zh']) json(`transcripts/fixture.${lang}.json`, []);
   for (const path of ['index/chunks.json', 'profiles/cards.json', 'evidence/elastic.json',
     'references/fixture.json', 'concepts/fixture.json', 'transcripts/corrections.json', 'transcripts/fixture.review.json',
     'profiles/provenance.json', 'runtime/ledger.json', 'transcripts/batches/hidden.json', 'raw-packet.json']) json(path, []);
@@ -162,7 +163,10 @@ test('splits allowlisted private inputs and gates starter cutover on readiness',
   assert.equal(pod.containers[0].image, image);
   assert.equal(pod.containers[0].volumeMounts.find(mount => mount.name === 'prepared').readOnly, true);
   const paths = pod.volumes.find(volume => volume.name === 'prepared').projected.sources.flatMap(source => source.secret.items.map(item => item.path));
-  assert.ok(paths.includes('transcripts/fixture.hi.json'));
+  assert.ok(paths.includes('transcripts/fixture.en.json'));
+  assert.ok(paths.includes('transcripts/fixture.es.json'));
+  assert.ok(!paths.includes('transcripts/fixture.hi.json'));
+  assert.ok(!paths.includes('transcripts/fixture.zh.json'));
   assert.ok(paths.includes('references/fixture.json'));
   assert.ok(paths.includes('transcripts/fixture.review.json'));
   assert.ok(!paths.some(path => /provenance|ledger|batches|raw-packet/.test(path)));

@@ -2,9 +2,7 @@ import type { Chunk, Corrections, Lang, ProfileCard } from "../types";
 import type { Lesson } from "./schema";
 const reasons: Record<Lang, string> = {
   en: "This response did not have valid support from the selected sources.",
-  hi: "इस उत्तर के लिए चुने गए स्रोतों से मान्य समर्थन नहीं मिला।",
   es: "Esta respuesta no tenía respaldo válido en las fuentes seleccionadas.",
-  zh: "此回答没有获得所选来源的有效支持。",
 };
 export function validateLesson(value: Lesson, evidence: Chunk[], sourceIds: string[], card: ProfileCard | null, corrections: Corrections, lang: Lang): { lesson: Lesson; validCitations: boolean } {
   const allowed = new Map(evidence.filter((chunk) => sourceIds.includes(chunk.sourceId)).map((chunk) => [chunk.chunkId, chunk]));

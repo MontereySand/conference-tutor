@@ -52,7 +52,7 @@ describe("session isolation",()=>{
     expect(state.askedAtMs).toBe(1200);
     expect(state.wasPlaying).toBe(true);
     state=sessionReducer(state,{type:"bookmark",ms:3200,wasPlaying:false});
-    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"hi"});
+    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"es"});
     expect(state.askedAtMs).toBe(3200);
     expect(state.wasPlaying).toBe(false);
   });
@@ -63,12 +63,12 @@ describe("session isolation",()=>{
     expect(state.result).toBeNull();
     expect(state.pending).toBeNull();
     expect(state.queuedRequest).toEqual(request);
-    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"hi"});
+    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"en"});
     expect(state.queuedRequest).toEqual(request);
     expect(state.askedAtMs).toBe(687000);
     expect(state.wasPlaying).toBe(true);
     expect(sessionReducer(state,{type:"error",key,error:{stage:"request",code:"unavailable"}})).toBe(state);
-    const replacementKey={...key,lang:"hi" as const,version:state.version,turnId:"replacement"};
+    const replacementKey={...key,lang:"en" as const,version:state.version,turnId:"replacement"};
     state=sessionReducer(state,{type:"begin",key:replacementKey,request:state.queuedRequest!});
     expect(state.queuedRequest).toBeNull();
     expect(sessionReducer(state,{type:"result",result})).toBe(state);
@@ -82,7 +82,7 @@ describe("session isolation",()=>{
     const followup:LessonRequest={requestKind,question:"Make this simpler",corrections:{depth:"simple",noAnalogy:false}};
     const nextKey={...key,turnId:"followup"};
     state=sessionReducer(state,{type:"begin",key:nextKey,request:followup});
-    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"zh"});
+    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"es"});
     expect(state.queuedRequest).toEqual(followup);
     expect(state.result).toBe(result);
     expect(state.history).toEqual([]);

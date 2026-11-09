@@ -1,9 +1,12 @@
+import "./layers.css";
 import type { Metadata } from "next";
-import { Noto_Sans, Noto_Sans_Devanagari, Noto_Sans_SC } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
 import { Rum } from "@/components/telemetry/rum";
-const noto=Noto_Sans({variable:"--font-noto",subsets:["latin","latin-ext"],display:"swap"});
-const devanagari=Noto_Sans_Devanagari({variable:"--font-noto-hi",subsets:["devanagari"],display:"swap"});
-const chinese=Noto_Sans_SC({variable:"--font-noto-zh",preload:false,display:"swap"});
-export const metadata:Metadata={title:"Conference tutor",description:"Understand the hard part of a technical talk, then return without losing your place."};
-export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="en" className={noto.variable+" "+devanagari.variable+" "+chinese.variable}><body><Rum/>{children}</body></html>;}
+
+const noto = Noto_Sans({ variable: "--font-noto", subsets: ["latin", "latin-ext"], display: "swap" });
+export const metadata: Metadata = { title: "Conference tutor", description: "Understand the hard part of a technical talk, then return without losing your place." };
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="en" data-theme="light" className={noto.variable}><body><Providers><Rum />{children}</Providers></body></html>;
+}

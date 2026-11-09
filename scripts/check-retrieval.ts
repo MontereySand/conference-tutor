@@ -6,13 +6,9 @@ import type { Lang, Chunk } from "../lib/types.ts";
 import { ElasticEvidenceSchema } from "../lib/data-schema.ts";
 const cases: { id: string; lang: Lang; query: string; window: [number, number] }[] = [
   { id: "harness-en", lang: "en", query: "What is an AI agent harness?", window: [115000, 159000] },
-  { id: "harness-hi", lang: "hi", query: "AI एजेंट हार्नेस क्या है?", window: [115000, 159000] },
   { id: "harness-es", lang: "es", query: "¿Qué es el arnés de un agente de IA?", window: [115000, 159000] },
-  { id: "harness-zh", lang: "zh", query: "什么是 AI 智能体的 harness？", window: [115000, 159000] },
   { id: "policy-en", lang: "en", query: "Why is email blocked after reading a confidential document?", window: [687000, 706000] },
-  { id: "policy-hi", lang: "hi", query: "गोपनीय दस्तावेज़ पढ़ने के बाद ईमेल भेजना क्यों बंद हो जाता है?", window: [687000, 706000] },
   { id: "policy-es", lang: "es", query: "¿Por qué se bloquea el correo después de leer un documento confidencial?", window: [687000, 706000] },
-  { id: "policy-zh", lang: "zh", query: "为什么读取机密文档后发送电子邮件会被阻止？", window: [687000, 706000] },
 ];
 async function main() {
   if (!process.env.ELASTICSEARCH_URL || !process.env.ELASTICSEARCH_API_KEY) throw new Error("Elastic environment is not configured");
@@ -58,7 +54,8 @@ async function main() {
   const hybrid = summary.hybrid!; const rerank = summary.rerank!;
   const appMode = rerank.available && rerank.passedTop3 > hybrid.passedTop3 && rerank.medianMs! - hybrid.medianMs! <= 400 ? "rerank" : "hybrid";
   const passed = summary[appMode]!.passedTop3;
-  const result = { at: new Date().toISOString(), inventedQueries: true, queryCount: cases.length, appMode, passedTop3: passed, required: 7, passed: passed >= 7, summary, rows };
+  const required = Math.ceil(cases.length * 7 / 8);
+  const result = { at: new Date().toISOString(), inventedQueries: true, queryCount: cases.length, appMode, passedTop3: passed, required, passed: passed >= required, summary, rows };
   mkdirSync(resolve("data/evidence"), { recursive: true }); writeFileSync(resolve("data/evidence/retrieval.json"), JSON.stringify(result, null, 2) + "\n");
   writeFileSync(evidencePath, JSON.stringify({ ...original, appMode }, null, 2) + "\n");
   console.log(JSON.stringify({ appMode, summary, passed: result.passed }));

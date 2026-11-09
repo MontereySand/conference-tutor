@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@astryxdesign/core/Button";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
+import { TextArea } from "@astryxdesign/core/TextArea";
 import { t } from "@/lib/i18n";
 import type { Lang, TurnKey } from "@/lib/types";
 import { sameTurn } from "@/lib/session/reducer";
 import type { AskResult } from "./types";
 export function Prediction({result,lang,onCites}:{result:AskResult;lang:Lang;onCites:(ids:string[])=>React.ReactNode}) {
-  const [opened,setOpened]=useState(false),[attempt,setAttempt]=useState(""),[revealed,setRevealed]=useState(false),[pending,setPending]=useState(false),[failed,setFailed]=useState(false),[verdict,setVerdict]=useState<"correct"|"partly"|"incorrect"|null>(null);
+  const [attempt,setAttempt]=useState(""),[revealed,setRevealed]=useState(false),[pending,setPending]=useState(false),[failed,setFailed]=useState(false),[verdict,setVerdict]=useState<"correct"|"partly"|"incorrect"|null>(null);
   const controller=useRef<AbortController|null>(null),text=t(lang),prediction=result.lesson.prediction;
   useEffect(()=>()=>controller.current?.abort(),[]);
   if(!prediction)return null;
@@ -23,7 +24,31 @@ export function Prediction({result,lang,onCites}:{result:AskResult;lang:Lang;onC
   }
   function editAttempt(value:string){
     controller.current?.abort();
-    setAttempt(value);setPending(false);setFailed(false);setVerdict(null);
+    setAttempt(value.slice(0,2000));setPending(false);setFailed(false);setVerdict(null);
   }
-  return <section className="prediction"><Button variant="outline" onClick={()=>setOpened(true)} aria-expanded={opened}>{text.tryPrediction}</Button>{opened&&<><h3>{text.prediction}</h3><p>{prediction.prompt}</p><small>{text.predictionHidden}</small><label>{text.attempt}<Textarea maxLength={2000} value={attempt} onChange={event=>editAttempt(event.target.value)}/></label><div className="button-row"><Button disabled={pending||!attempt.trim()} onClick={check}>{pending?text.checking:text.check}</Button><Button variant="outline" onClick={()=>{controller.current?.abort();setPending(false);setRevealed(true);}}>{text.skip}</Button></div>{failed&&<p role="alert">{text.predictionError}</p>}{verdict&&<strong role="status">{text[verdict]}</strong>}{revealed&&<div><h4>{text.expected}</h4><p>{prediction.expected}</p>{onCites(prediction.cites)}</div>}</>}</section>;
+  return <section className="prediction">
+    <Collapsible className="prediction-dock" defaultIsOpen={false} trigger={
+      <span className="prediction-dock-trigger"><strong>{text.checkUnderstanding}</strong><span>{prediction.prompt}</span></span>
+    }>
+      <div className="prediction-body">
+        <h3>{text.prediction}</h3>
+        <p>{prediction.prompt}</p>
+        {!revealed&&<small>{text.predictionHidden}</small>}
+        <TextArea label={text.attempt} maxLength={2000} value={attempt} onChange={editAttempt}/>
+        <div className="button-row">
+          <Button isDisabled={pending||!attempt.trim()} onClick={check} label={pending?text.checking:text.check}/>
+          <Button variant="secondary" onClick={()=>{controller.current?.abort();setPending(false);setFailed(false);setVerdict(null);setRevealed(true);}} label={text.skip}/>
+        </div>
+        {failed&&<p role="alert">{text.predictionError}</p>}
+        {verdict&&<strong role="status">{text[verdict]}</strong>}
+        {revealed&&<div className="prediction-feedback">
+          <h4>{text.expected}</h4>
+          <p>{prediction.expected}</p>
+          {prediction.cites.length>0&&<Collapsible className="prediction-support" trigger={text.practiceWhy} defaultIsOpen={false}>
+            {onCites(prediction.cites)}
+          </Collapsible>}
+        </div>}
+      </div>
+    </Collapsible>
+  </section>;
 }

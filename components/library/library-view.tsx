@@ -7,8 +7,8 @@ import type { Lang, ProfileCard } from "@/lib/types";
 import { htmlLang, t, timestamp } from "@/lib/i18n";
 import { ProfilePicker } from "@/components/profile/profile-picker";
 import { LanguagePicker } from "@/components/profile/language-picker";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@astryxdesign/core/Button";
+import { TextArea } from "@astryxdesign/core/TextArea";
 import { StageErrorMessage } from "@/components/lesson/stage-error";
 import type { StageError } from "@/components/lesson/types";
 type Moment={chunkId:string;sourceId:string;title:string;startMs:number;endMs:number;url:string};
@@ -42,12 +42,11 @@ export function LibraryView({sources,cards,initialLang,initialProfile}:{sources:
     <section className="library-search panel" aria-labelledby="search-title">
      <div className="section-heading"><h2 id="search-title">{text.search}</h2><Search aria-hidden="true" size={22}/></div>
      <form onSubmit={event=>{event.preventDefault();void search();}}>
-      <label htmlFor="library-question">{text.searchHint}</label>
-      <Textarea id="library-question" maxLength={2000} value={question} onChange={event=>{if(pending){controller.current?.abort();setPending(false);}setQuestion(event.target.value);}}/>
-      <Button type="submit" disabled={pending||!question.trim()}>{pending?text.searching:text.searchAction}<ArrowUpRight aria-hidden="true"/></Button>
+      <TextArea id="library-question" label={text.searchHint} containerClassName="library-search-field" value={question} onChange={value=>{if(pending){controller.current?.abort();setPending(false);}setMoments(null);setError(null);setQuestion(value.slice(0,2000));}}/>
+      <Button type="submit" variant="primary" label={pending?text.searching:text.searchAction} isDisabled={!question.trim()} isLoading={pending}/>
      </form>
      {pending&&<p role="status" className="disclosure">{text.searching}</p>}
-     {error&&<><StageErrorMessage error={error} lang={lang}/><Button variant="outline" onClick={()=>void search()}>{text.retry}</Button></>}
+     {error&&<><StageErrorMessage error={error} lang={lang}/><Button variant="secondary" label={text.retry} onClick={()=>void search()}/></>}
      <div aria-live="polite" aria-atomic="true">
       {moments!==null&&<><h3>{text.searchResults}</h3>{moments.length===0?<p>{text.noMoments}</p>:<ul className="moment-list">{moments.map(moment=><li key={moment.chunkId}><Link href={momentUrl(moment)}><span className="moment-time">{timestamp(moment.startMs)}</span><span>{sources.find(source=>source.id===moment.sourceId)?.labels[lang].title??moment.title}</span><ArrowUpRight aria-hidden="true" size={18}/></Link></li>)}</ul>}</>}
      </div>

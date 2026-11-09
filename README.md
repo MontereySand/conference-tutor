@@ -21,7 +21,7 @@ Checks: npm run lint; npm test; npm run build; npm run typecheck. CI uses no pri
 
 ## Retrieval verified
 
-71 passages use Jina `.jina-embeddings-v5-text-small` through Elasticsearch `semantic_text`. Eight invented queries cover two mechanisms across all four languages.
+71 passages use Jina `.jina-embeddings-v5-text-small` through Elasticsearch `semantic_text`. A historical one-pass experiment used eight invented queries covering two mechanisms in English, Hindi, Spanish and Simplified Chinese; the current product supports English and Spanish only.
 
 | Mode | Expected window in top 3 | Median latency |
 | --- | ---: | ---: |
@@ -32,7 +32,7 @@ Checks: npm run lint; npm test; npm run build; npm run typecheck. CI uses no pri
 
 Hybrid remains selected: reranking did not improve top-3 support. These are one-pass retrieval measurements, not teaching-quality or native-language accuracy claims.
 
-Translations in Hindi, Spanish and Simplified Chinese are machine-generated, not native-reviewed. Untouched sentence timings remain derived; human timing accuracy and review of all 14 minimized cards are not yet established. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
+Spanish translations are machine-generated, not native-reviewed. Untouched sentence timings remain derived; human timing accuracy and review of all 14 minimized cards are not yet established. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
 
 Voice is not included in this build. The original YouTube talk streams directly to the browser; the judge app does not relay original media from a laptop.
 

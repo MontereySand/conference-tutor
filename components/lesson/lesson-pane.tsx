@@ -1,5 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Button } from "@astryxdesign/core/Button";
+import { Collapsible } from "@astryxdesign/core/Collapsible";
 import { htmlLang, t, timestamp } from "@/lib/i18n";
 import type { Corrections, Lang, ProfileCard } from "@/lib/types";
 import type { AskResult, StageError } from "./types";
@@ -15,8 +16,8 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
         const source=result?.sources.find(source=>source.chunkId===id);
         if(!source) return null;
         return source.kind==="talk"&&source.startMs!==undefined
-          ? <Button variant="outline" size="sm" key={id} onClick={()=>onSeek(source.startMs!)} aria-label={text.source+": "+source.title+" "+timestamp(source.startMs)}>
-              <span>{timestamp(source.startMs)}</span><span>{source.title}</span>
+          ? <Button variant="secondary" size="sm" key={id} onClick={()=>onSeek(source.startMs!)} label={text.source+": "+source.title+" "+timestamp(source.startMs)}>
+              <span>{timestamp(source.startMs)}</span>{" "}<span>{source.title}</span>
             </Button>
           : <a className="citation-link" key={id} href={source.url} target="_blank" rel="noreferrer">{source.title} <span aria-hidden="true">↗</span></a>;
       })}
@@ -31,7 +32,7 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
     {pending&&<p role="status">{text.pending}</p>}
     {error&&<div>
       <StageErrorMessage error={error} lang={lang}/>
-      <Button variant="outline" disabled={pending} onClick={onRetry}>{text.retry}</Button>
+      <Button variant="secondary" isDisabled={pending} onClick={onRetry} label={text.retry}/>
     </div>}
     {!result&&!pending&&!error&&<p className="lesson-empty">{text.lessonEmpty}</p>}
     {result&&<div className={previous?"lesson-content previous-language":"lesson-content"} lang={htmlLang[result.turnKey.lang]}>
@@ -47,9 +48,7 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
       {result.lesson.boundary&&<section className="source-boundary">
         <h3 lang={htmlLang[lang]}>{text.boundary}</h3>
         <p>{result.lesson.boundary.reason}</p>
-        {result.lesson.boundary.nearbyQuestion&&<Button variant="outline" disabled={pending||previous} onClick={()=>onQuestion(result.lesson.boundary!.nearbyQuestion)}>
-          {text.nearby}: {result.lesson.boundary.nearbyQuestion}
-        </Button>}
+        {result.lesson.boundary.nearbyQuestion&&<Button variant="secondary" isDisabled={pending||previous} onClick={()=>onQuestion(result.lesson.boundary!.nearbyQuestion)} label={`${text.nearby}: ${result.lesson.boundary.nearbyQuestion}`}/>}
       </section>}
       {result.lesson.bridge&&card&&!corrections.noAnalogy&&<section className="bridge">
         <h3 lang={htmlLang[lang]}>{text.bridge} {card.name}</h3>
@@ -57,10 +56,11 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
         <div><h4 lang={htmlLang[lang]}>{text.limit}</h4><p>{result.lesson.bridge.limit}</p></div>
       </section>}
       {result.lesson.steps.length>0&&<section>
-        <h3 lang={htmlLang[lang]}>{text.steps}</h3>
-        <ol className="lesson-steps">{result.lesson.steps.map((step,i)=><li key={i}>
-          <p>{step.text}</p>{citations(step.cites)}
-        </li>)}</ol>
+        <Collapsible key={result.turnKey.turnId} className="lesson-steps-disclosure" trigger={text.steps} defaultIsOpen={false}>
+          <ol className="lesson-steps">{result.lesson.steps.map((step,i)=><li key={i}>
+            <p>{step.text}</p>{citations(step.cites)}
+          </li>)}</ol>
+        </Collapsible>
       </section>}
       {result.lesson.referenceNotes.map(note=>{
         const source=result.sources.find(source=>source.chunkId===note.refChunkId&&source.kind==="reference");
@@ -74,18 +74,18 @@ export function LessonPane({result,lang,card,corrections,pending,error,askedAtMs
         <section className="corrections">
           <h3>{text.correctionsHeading}</h3>
           <div className="button-row">
-            <Button variant="outline" disabled={pending} aria-pressed={corrections.depth==="simple"} onClick={()=>onCorrect({...corrections,depth:"simple"})}>{text.simpler}</Button>
-            <Button variant="outline" disabled={pending} aria-pressed={corrections.depth==="deep"} onClick={()=>onCorrect({...corrections,depth:"deep"})}>{text.deeper}</Button>
-            <Button variant="outline" disabled={pending} aria-pressed={corrections.noAnalogy} onClick={()=>onCorrect({...corrections,noAnalogy:true})}>{text.noAnalogy}</Button>
-            <Button variant="outline" disabled={pending} onClick={()=>onCorrect({...corrections,depth:"deep"})}>{text.knowAlready}</Button>
+            <Button variant="secondary" isDisabled={pending} aria-pressed={corrections.depth==="simple"} onClick={()=>onCorrect({...corrections,depth:"simple"})} label={text.simpler}/>
+            <Button variant="secondary" isDisabled={pending} aria-pressed={corrections.depth==="deep"} onClick={()=>onCorrect({...corrections,depth:"deep"})} label={text.deeper}/>
+            <Button variant="secondary" isDisabled={pending} aria-pressed={corrections.noAnalogy} onClick={()=>onCorrect({...corrections,noAnalogy:true})} label={text.noAnalogy}/>
+            <Button variant="secondary" isDisabled={pending} onClick={()=>onCorrect({...corrections,depth:"deep"})} label={text.knowAlready}/>
           </div>
         </section>
         {!pending&&<Prediction key={result.turnKey.turnId} result={result} lang={lang} onCites={citations}/>}
       </>}
     </div>}
     <footer className="return-controls">
-      <Button onClick={onReturn}>{text.returnTalk}</Button>
-      {askedAtMs!==null&&<Button variant="outline" onClick={onBookmark}>{text.returnAsked}</Button>}
+      <Button variant="primary" onClick={onReturn} label={text.returnTalk}/>
+      {askedAtMs!==null&&<Button variant="secondary" onClick={onBookmark} label={text.returnAsked}/>}
     </footer>
     <small className="voice-note">{text.voiceOmitted}</small>
   </aside>;

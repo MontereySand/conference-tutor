@@ -8,8 +8,8 @@ const numericKeys: Record<string, true> = {
   "http.status_code": true, "http.response.status_code": true,
 };
 const enumValues: Record<string, readonly string[]> = {
-  lang: ["en", "hi", "es", "zh", "und"],
-  locale: ["en", "hi", "es", "zh", "und"],
+  lang: ["en", "es", "und"],
+  locale: ["en", "es", "und"],
   stage: ["validate", "retrieve", "generate", "decide"],
   kind: ["intent", "practice", "library", "lesson", "decision", "transcription", "narration", "translation"],
   mode: ["keyword", "semantic", "hybrid", "rerank"],

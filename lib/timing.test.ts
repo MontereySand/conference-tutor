@@ -86,7 +86,7 @@ describe("timing review application", () => {
     expect(() => applyTimingReview(original, { b: 350 })).toThrow();
   });
 
-  it.each(["en", "hi", "es", "zh"] as const)("applies aligned intervals and status in %s", lang => {
+  it.each(["en", "es"] as const)("applies aligned intervals and status in %s", lang => {
     const original = transcript(lang);
     const result = applyTimingReview(original, { a: 100, b: 500, c: 900 });
     expect(intervals(result)).toEqual([[100, 500, "reviewed"], [500, 900, "reviewed"], [900, 1000, "reviewed"]]);
