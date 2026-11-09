@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import type { Lang, TurnKey } from "@/lib/types";
 import { sameTurn } from "@/lib/session/reducer";
 import type { AskResult } from "./types";
+import styles from "./teaching.module.css";
 export function Prediction({result,lang,onCites}:{result:AskResult;lang:Lang;onCites:(ids:string[])=>React.ReactNode}) {
   const [attempt,setAttempt]=useState(""),[revealed,setRevealed]=useState(false),[pending,setPending]=useState(false),[failed,setFailed]=useState(false),[verdict,setVerdict]=useState<"correct"|"partly"|"incorrect"|null>(null);
   const controller=useRef<AbortController|null>(null),text=t(lang),prediction=result.lesson.prediction;
@@ -26,25 +27,25 @@ export function Prediction({result,lang,onCites}:{result:AskResult;lang:Lang;onC
     controller.current?.abort();
     setAttempt(value.slice(0,2000));setPending(false);setFailed(false);setVerdict(null);
   }
-  return <section className="prediction">
-    <Collapsible className="prediction-dock" defaultIsOpen={false} trigger={
-      <span className="prediction-dock-trigger"><strong>{text.checkUnderstanding}</strong><span>{prediction.prompt}</span></span>
+  return <section className={styles.bounded}>
+    <Collapsible className={styles.disclosure} defaultIsOpen={false} trigger={
+      <span className={styles.predictionTrigger}><strong>{text.checkUnderstanding}</strong><span>{prediction.prompt}</span></span>
     }>
-      <div className="prediction-body">
+      <div className={styles.predictionBody}>
         <h3>{text.prediction}</h3>
         <p>{prediction.prompt}</p>
         {!revealed&&<small>{text.predictionHidden}</small>}
         <TextArea label={text.attempt} maxLength={2000} value={attempt} onChange={editAttempt}/>
-        <div className="button-row">
+        <div className={styles.actions}>
           <Button isDisabled={pending||!attempt.trim()} onClick={check} label={pending?text.checking:text.check}/>
           <Button variant="secondary" onClick={()=>{controller.current?.abort();setPending(false);setFailed(false);setVerdict(null);setRevealed(true);}} label={text.skip}/>
         </div>
         {failed&&<p role="alert">{text.predictionError}</p>}
         {verdict&&<strong role="status">{text[verdict]}</strong>}
-        {revealed&&<div className="prediction-feedback">
+        {revealed&&<div className={styles.predictionBody}>
           <h4>{text.expected}</h4>
           <p>{prediction.expected}</p>
-          {prediction.cites.length>0&&<Collapsible className="prediction-support" trigger={text.practiceWhy} defaultIsOpen={false}>
+          {prediction.cites.length>0&&<Collapsible className={styles.disclosure} trigger={text.practiceWhy} defaultIsOpen={false}>
             {onCites(prediction.cites)}
           </Collapsible>}
         </div>}
