@@ -130,7 +130,7 @@ select { max-width: 100%; min-height: 2.75rem; color: var(--ink); background: va
 .sentence-row.is-active { border-left-color: var(--burnt); }
 .sentence-row:not(.is-active) .sentence { font-weight: 400; font-size: .95rem; }
 .sentence-row.is-active .sentence { font-size: 1.2rem; font-weight: 650; }
-.sentence-row .sentence { display: grid; grid-template-columns: 3rem minmax(0,1fr); gap: .25rem; text-align: left; align-items: start; width: 100%; padding: .8rem .4rem; background: transparent; border-radius: .25rem; line-height: 1.8; overflow-wrap: anywhere; }
+.sentence-row .sentence { display: grid; grid-template-columns: 3rem minmax(0,1fr); gap: .25rem; text-align: left; align-items: start; width: 100%; padding: .8rem .4rem; background: transparent; border: 0; border-radius: .25rem; line-height: 1.8; overflow-wrap: anywhere; }
 .sentence-time { font-size: .72rem; font-weight: 500; line-height: 2.4; font-variant-numeric: tabular-nums; }
 .original-line { display: block; margin-top: .5rem; font-weight: 400; font-size: .9rem; }
 .concepts { display: flex; gap: .5rem; flex-wrap: wrap; min-height: 2.5rem; padding-top: .75rem; }
