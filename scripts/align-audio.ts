@@ -99,7 +99,8 @@ function align() {
     }
   }
   const update = (t: Transcript): Transcript => ({ ...t, reviewed: false, sentences: t.sentences.map((s, i): Sentence => {
-    const { words: _words, ...original } = s;
+    const original = { ...s };
+    delete original.words;
     const match = candidates[i];
     if (!match) return original;
     return { ...original, startMs: match.startMs, endMs: match.endMs, timing: "derived", ...(t.lang === "en" && match.words ? { words: match.words } : {}) };

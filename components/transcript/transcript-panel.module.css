@@ -5,14 +5,17 @@
 .selectionHint { padding: 0 1rem .3rem; color: #555; }
 .scroll { flex: 1 1 auto; min-height: 5rem; overflow: auto; overscroll-behavior: contain; padding: .25rem 1rem 1rem; }
 .scroll:focus-visible { outline: 2px solid #171717; outline-offset: -2px; }
-.row { padding: .65rem 0; color: #595959; transition: color 160ms ease, opacity 160ms ease; }
+.row { display: flow-root; padding: .65rem 0; color: #595959; transition: color 160ms ease, opacity 160ms ease; }
 .row.past { color: #737373; }
 .row.active { color: #111; }
-.rowTools { display: flex; gap: .25rem; align-items: center; }
+.rowTools { float: right; display: flex; align-items: center; margin-left: .5rem; }
+.rowTools .timeButton { font-size: .75rem; color: #555; }
+.rowTools .menuButton { min-width: 2rem; font-size: 1.2rem; }
 .caption { font-size: clamp(1rem, 1.5vw, 1.4rem); font-weight: 550; line-height: 1.5; margin: .3rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .active .caption { font-weight: 700; }
 .word { background: #171717; color: #fff; border-radius: .15em; }
 .original { color: #555; font-size: .8rem; line-height: 1.5; margin: .3rem 0; overflow-wrap: anywhere; }
+.caption, .original { -webkit-user-select: text; user-select: text; }
 .editor { display: grid; gap: .5rem; margin-top: .6rem; }
 .editor label { font-weight: 600; }
 .editor textarea { width: 100%; min-height: 5rem; resize: vertical; padding: .6rem; color: #171717; background: #fff; border: 1px solid #555; border-radius: .25rem; font: inherit; }

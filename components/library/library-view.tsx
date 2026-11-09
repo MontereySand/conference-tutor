@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Search } from "lucide-react";
 import { Button } from "@astryxdesign/core/Button";
@@ -28,12 +28,25 @@ export function LibraryView({ sources, cards, initialLang, initialProfile }: { s
   const [pending, setPending] = useState(false);
   const [opening, setOpening] = useState(false);
   const controller = useRef<AbortController | null>(null);
+  const selectedArt = useRef<HTMLDivElement | null>(null);
+  const selectionOrigin = useRef<DOMRect | null>(null);
   const text = t(lang);
   const selected = cards.find(card => card.id === profile);
   const source = sources.find(item => item.id === sourceId && item.ready);
   const orderedCards = introCards(cards);
 
   useEffect(() => () => controller.current?.abort(), []);
+  useLayoutEffect(() => {
+    const origin = selectionOrigin.current;
+    const target = selectedArt.current;
+    selectionOrigin.current = null;
+    if (!origin || !target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const end = target.getBoundingClientRect();
+    const x = origin.left + origin.width / 2 - end.left - end.width / 2;
+    const y = origin.top + origin.height / 2 - end.top - end.height / 2;
+    target.getAnimations().forEach(animation => animation.cancel());
+    target.animate([{ transform: `translate(${x}px, ${y}px) scale(.45)`, opacity: .65 }, { transform: "translate(0, 0) scale(1)", opacity: 1 }], { duration: 400, easing: "cubic-bezier(.2,.7,.2,1)" });
+  }, [profile]);
   function selection(nextLang: Lang, nextProfile: string | null) {
     controller.current?.abort();
     setPending(false); setError(null); setMoments(null);
@@ -72,10 +85,10 @@ export function LibraryView({ sources, cards, initialLang, initialProfile }: { s
   }
   return <div lang={htmlLang[lang]} className={styles.surface}>
     <a className="skip-link" href="#intro-content">{text.skipContent}</a>
-    <header className={styles.topbar}>
+    <header className={`${styles.topbar} theatre-darkbar`}>
       <Link href="/" className={styles.brand}>{text.brand}</Link>
       <div className={styles.controls}>
-        <button className={styles.searchButton} type="button" aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Search size={17} aria-hidden="true" />{text.search}</button>
+        <button className={styles.searchButton} type="button" aria-label={text.search} aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Search size={17} aria-hidden="true" /><span className={styles.searchLabel}>{text.search}</span></button>
         <LanguagePicker lang={lang} onChange={value => selection(value, profile)} />
       </div>
     </header>
@@ -85,7 +98,7 @@ export function LibraryView({ sources, cards, initialLang, initialProfile }: { s
         <p>{text.introChoose}</p>
       </section>
       <section className={styles.selected} aria-label={text.chooseProfile}>
-        <div className={styles.selectedArt}><ProfileArt profileId={profile} label={selected?.name ?? text.general} /></div>
+        <div ref={selectedArt} className={styles.selectedArt}><ProfileArt profileId={profile} label={selected?.name ?? text.general} /></div>
         <div className={styles.identity}>
           <p className={styles.kicker}>{text.tunedFor}</p>
           <h2>{selected?.name ?? text.general}</h2>
@@ -103,7 +116,7 @@ export function LibraryView({ sources, cards, initialLang, initialProfile }: { s
           {[null, ...orderedCards].map(card => {
             const name = card?.name ?? text.general;
             const id = card?.id ?? null;
-            return <button type="button" key={id ?? "general"} className={styles.card} aria-label={name} aria-pressed={profile === id} onClick={() => selection(lang, id)}>
+            return <button type="button" key={id ?? "general"} className={styles.card} aria-label={name} aria-pressed={profile === id} onClick={event => { if (id !== profile) selectionOrigin.current = event.currentTarget.getBoundingClientRect(); selection(lang, id); }}>
               <span className={styles.cardName}>{card ? card.name.trim().split(/\s+/)[0] : text.general}</span>
               <span className={styles.cardArt}><ProfileArt profileId={id} label={name} /></span>
               <span className={styles.cardRole}>{card?.role ?? text.generalProfileNote}</span>

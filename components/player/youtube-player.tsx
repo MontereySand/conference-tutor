@@ -42,7 +42,7 @@ export const YouTubePlayer=forwardRef<PlayerHandle,{videoId:string;initialMs:num
     pause:()=>{if(readyRef.current)player.current!.pauseVideo();},
     state:()=>readyRef.current?player.current!.getPlayerState():-1,
     rate:()=>readyRef.current?player.current!.getPlaybackRate():1
-  }),[sample,seekTo]);
+  }),[seekTo]);
   useEffect(()=>{
     let disposed=false, stopClock:(()=>void)|undefined;
     loadApi().then(YT=>{
@@ -62,8 +62,8 @@ export const YouTubePlayer=forwardRef<PlayerHandle,{videoId:string;initialMs:num
       <Button variant="secondary" size="sm" label={state===1?text.pause:text.play} isDisabled={!ready} onClick={()=>{if(state===1)player.current?.pauseVideo();else player.current?.playVideo();}}/>
       <span className={styles.time}>{timestamp(current)} / {timestamp(duration)}</span>
       <div className={styles.scrubber}><Slider label={text.learnSeek} isLabelHidden min={0} max={Math.max(1,duration)} step={1000} value={Math.max(0,Math.min(current,duration))} formatValue={timestamp} valueDisplay="none" isDisabled={!ready} onChange={seekTo}/></div>
-      <Button variant="secondary" size="sm" label={muted?text.learnUnmute:text.learnMute} isDisabled={!ready} onClick={()=>{if(!player.current)return;if(muted)player.current.unMute();else player.current.mute();setMuted(player.current.isMuted());}}/>
-      <div className={styles.volume}><Slider label={text.learnVolume} isLabelHidden min={0} max={100} value={volume} valueDisplay="none" isDisabled={!ready} onChange={value=>{if(!player.current)return;player.current.setVolume(value);if(value>0&&player.current.isMuted())player.current.unMute();setVolume(value);setMuted(player.current.isMuted());}}/></div>
+      <Button variant="secondary" size="sm" label={muted?text.learnUnmute:text.learnMute} isDisabled={!ready} onClick={()=>{if(!player.current)return;if(muted)player.current.unMute();else player.current.mute();setMuted(!muted);}}/>
+      <div className={styles.volume}><Slider label={text.learnVolume} isLabelHidden min={0} max={100} value={volume} valueDisplay="none" isDisabled={!ready} onChange={(value:number)=>{if(!player.current)return;player.current.setVolume(value);if(value>0){player.current.unMute();setMuted(false);}setVolume(value);}}/></div>
       <Selector label={text.playbackRate} isLabelHidden variant="secondary" isDisabled={!ready} value={String(rate)} onChange={value=>{if(ready)player.current?.setPlaybackRate(Number(value));}} options={rates.map(value=>({value:String(value),label:`${value}×`}))}/>
       <Button variant="secondary" size="sm" label={text.learnFullscreen} isDisabled={!ready} onClick={()=>{if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});else if(shell.current?.requestFullscreen)void shell.current.requestFullscreen().catch(()=>{});}}/>
     </div>,controlsTarget)}

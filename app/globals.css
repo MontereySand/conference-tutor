@@ -30,6 +30,44 @@
   --color-text-accent: var(--ink);
   --color-on-accent: var(--paper);
 }
+
+/* Keep control tokens local to the chrome, with light popups restored below. */
+.theatre-darkbar {
+  --color-text-primary: #f5f3ef;
+  --color-text-secondary: #d0cfcb;
+  --color-text-disabled: #a6a5a2;
+  --color-text-accent: #f5f3ef;
+  --color-icon-primary: #f5f3ef;
+  --color-icon-secondary: #d0cfcb;
+  --color-icon-disabled: #a6a5a2;
+  --color-neutral: #333;
+  --color-border: #888;
+  --color-border-emphasized: #ccc;
+  --color-accent: #f5f3ef;
+  --color-on-accent: #111;
+  --color-track: #777;
+  --color-overlay-hover: #ffffff1f;
+  --color-overlay-pressed: #ffffff33;
+}
+.theatre-darkbar :focus-visible { outline-color: #fff; }
+.theatre-darkbar :is(dialog, .astryx-selector-popup) {
+  --color-text-primary: var(--ink);
+  --color-text-secondary: #555;
+  --color-text-disabled: #666;
+  --color-text-accent: var(--ink);
+  --color-icon-primary: var(--ink);
+  --color-icon-secondary: #555;
+  --color-icon-disabled: #666;
+  --color-neutral: #1717171a;
+  --color-border: var(--line);
+  --color-border-emphasized: #666;
+  --color-accent: var(--ink);
+  --color-on-accent: var(--paper);
+  --color-track: #aaa;
+  --color-overlay-hover: #1717170f;
+  --color-overlay-pressed: #1717171f;
+}
+.theatre-darkbar :is(dialog, .astryx-selector-popup) :focus-visible { outline-color: var(--ink); }
 html { background: var(--paper); color: var(--ink); font-family: var(--font-mono), monospace; }
 body { margin: 0; min-height: 100vh; font-size: 1rem; line-height: 1.6; }
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {

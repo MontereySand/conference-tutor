@@ -19,7 +19,9 @@
 .dump {
   display: flex;
   flex-direction: column;
-  gap: .65rem;
+  gap: .35rem;
+  height: auto;
+  padding: .75rem;
 }
 
 .header {
@@ -41,7 +43,7 @@
 .header small { font-variant-numeric: tabular-nums; }
 .hint { margin: 0; color: #454545; font-size: .875rem; line-height: 1.45; }
 .dumpField { width: 100%; min-width: 0; }
-.dumpField textarea { min-height: 6rem; resize: vertical; }
+.dumpField textarea { min-height: 3rem; resize: vertical; }
 .actions, .citations { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .content { display: grid; gap: .9rem; }
 .content section { min-width: 0; }

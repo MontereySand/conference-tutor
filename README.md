@@ -1,8 +1,9 @@
 # Conference tutor
 
-Understand the hard part of a technical talk, then return to the same moment. Elasticsearch is the source/retrieval layer; explanations stay tied to retrieved evidence. General mode or a supplied professional card changes the explanation, not source facts.
+Understand a technical talk without stopping it. Elasticsearch is the source/retrieval layer; explanations stay tied to retrieved evidence. General mode or a supplied professional card changes the explanation, not source facts.
 
-The interface supports English and Spanish and uses official [Meta Astryx](https://github.com/meta/astryx) controls with Noto Sans. Grounded steps and optional practice use progressive disclosure inspired by [LearnHarness](https://github.com/amosblomqvist/learnharness/tree/da08cb5f7d098598ba963c6689b22054c9f2a5a3): the direct answer remains visible; the expected practice answer appears only after an attempt or explicit Skip. Source support never becomes an invented explanation. Rapid seeks wait for the real player clock before saving the question bookmark; unavailable-video mode preserves the selected context.
+Intro presents an overlapping fan of abstract profile cards, with the user's card last. Learn uses a theatre-style four-panel canvas: real 16:9 video, synchronized transcript, explanations and an editable Dump. The interface supports English and Spanish using official [Meta Astryx](https://github.com/meta/astryx) controls, IBM Plex Mono and Playfair Display. Selecting text, editing local caption annotations, asking questions and receiving answers leave playback running; transport and citation actions explicitly seek. Questions capture a bookmark, and retries/corrections retain that original context. Learner annotations never replace source evidence.
+Grounded steps and optional practice use progressive disclosure inspired by [LearnHarness](https://github.com/amosblomqvist/learnharness/tree/da08cb5f7d098598ba963c6689b22054c9f2a5a3): the direct answer remains visible; the expected practice answer appears only after an attempt or explicit Skip. Source support never becomes an invented explanation.
 The selected interface language also controls generated teaching fields, even when the original question is written in the other language.
 
 ## Private inputs, public code
@@ -35,7 +36,7 @@ Checks: npm run lint; npm test; npm run build; npm run typecheck. CI uses no pri
 
 Hybrid remains selected: reranking did not improve top-3 support. These are one-pass retrieval measurements, not teaching-quality or native-language accuracy claims.
 
-Spanish translations are machine-generated, not native-reviewed. Untouched sentence timings remain derived; human timing accuracy and review of all 14 minimized cards are not yet established. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
+Spanish translations are machine-generated, not native-reviewed. The supplied full audio was processed once: 188 of 327 sentence intervals were mapped, with complete English word timings for 104 sentences; uncertain intervals retain their original derived values. Forty-five bilingual source-cited definitions are explicitly labeled prepared, not live-generated. Human timing accuracy and review of all 14 minimized cards are not yet established. Evaluation questions are invented, not observed learner questions. No learner database, accounts, scraping or live-web retrieval. Publication of original source media/packets is not authorized by this code repository.
 
 Voice is not included in this build. The original YouTube talk streams directly to the browser; the judge app does not relay original media from a laptop.
 

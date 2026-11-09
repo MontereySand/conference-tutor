@@ -10,7 +10,7 @@ export function AskBox({lang,question,pending,disabled,inputRef,onChange,onSubmi
  return <form className={styles.dump} aria-label={text.dumpTitle} aria-busy={pending} onSubmit={event=>{event.preventDefault();if(!disabled&&!pending&&question.trim())onSubmit();}}>
    <header className={styles.header}><h2>{text.dumpTitle}</h2></header>
    <p className={styles.hint}>{text.dumpInstructions}</p>
-   <TextArea ref={inputRef} label={text.question} containerClassName={styles.dumpField} rows={4} maxLength={2000} value={question} placeholder={text.dumpPlaceholder} onChange={value=>onChange(value.slice(0,2000))}/>
+   <TextArea ref={inputRef} label={text.question} containerClassName={styles.dumpField} rows={2} maxLength={2000} value={question} placeholder={text.dumpPlaceholder} onChange={value=>onChange(value.slice(0,2000))}/>
    {disabled&&<small role="status">{text.playerLoading}</small>}
    {pending&&<small role="status">{text.pending}</small>}
    <div className={styles.actions}>

@@ -27,7 +27,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
  const abort=useCallback(()=>{controller.current?.abort();controller.current=null;update({type:"cancel"});},[update]);
  useEffect(()=>()=>{controller.current?.abort();},[]);
  const send=useCallback(async(request:LessonRequest,bookmark=false)=>{
-   const state=current.current,q=request.question.trim(),requestMs=player.current?.getTimeMs();if(seeking.current||!q||requestMs===undefined||!Number.isFinite(requestMs))return;
+   const state=current.current,q=request.question.trim(),requestMs=bookmark?player.current?.getTimeMs():(state.askedAtMs??player.current?.getTimeMs());if(seeking.current||!q||requestMs===undefined||!Number.isFinite(requestMs))return;
    const submitted={...request,question:q};
    if(bookmark)update({type:"bookmark",ms:requestMs,wasPlaying:player.current?.state()===1});
    controller.current?.abort();const active=new AbortController();controller.current=active;
@@ -69,7 +69,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
  function returnTalk(){surface.current?.focus({preventScroll:true});}
  function seek(ms:number){player.current?.seekTo(ms);surface.current?.focus({preventScroll:true});}
  function explain(){if(seeking.current)return;const ms=player.current?.getTimeMs();if(ms===undefined||!Number.isFinite(ms))return;const concept=concepts.find(concept=>ms>=concept.startMs&&ms<concept.endMs);askQuestion(concept?.suggested[current.current.lang]??t(current.current.lang).explainMoment);}
- function dump(selection:string){const addition=selection.trim();if(!addition)return;const draft=current.current.question;update({type:"question",question:(draft+(draft.trim()?"\n\n":"")+addition).slice(0,2000)});input.current?.focus();}
+ function dump(selection:string){const addition=selection.trim();if(!addition)return;const draft=current.current.question;update({type:"question",question:(draft+(draft.trim()?"\n\n":"")+addition).slice(0,2000)});requestAnimationFrame(()=>input.current?.focus());}
  const pending=session.pending!==null||session.queuedRequest!==null;
  return <div ref={surface} tabIndex={0} className={styles.surface} lang={htmlLang[session.lang]} aria-label={text.watch} aria-keyshortcuts="Space / ArrowRight ArrowDown ArrowLeft ArrowUp PageDown PageUp" onKeyDown={event=>{
   if(event.defaultPrevented||event.nativeEvent.isComposing||event.repeat||event.metaKey||event.ctrlKey||event.altKey||event.shiftKey||event.target!==event.currentTarget)return;
@@ -78,7 +78,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
   else if(["ArrowRight","ArrowDown","PageDown"].includes(event.key)&&!seeking.current&&!current.current.pending&&!current.current.queuedRequest){event.preventDefault();explain();}
   else if(["ArrowLeft","ArrowUp","PageUp"].includes(event.key)&&current.current.askedAtMs!==null){event.preventDefault();seek(current.current.askedAtMs);}
  }}>
- <header className={styles.header}><Link href={"/?lang="+session.lang+(session.profileId?"&profile="+encodeURIComponent(session.profileId):"")} className={styles.brand}>{text.brand}</Link><a className={styles.source} href={source.url} target="_blank" rel="noreferrer">{source.labels[session.lang].title} ↗</a><div className={styles.identity}><ProfileArt profileId={session.profileId} label={card?.name??text.general} className={styles.avatar}/><ProfilePicker cards={cards} profileId={session.profileId} lang={session.lang} onChange={id=>switchSelection(session.lang,id)}/><LanguagePicker lang={session.lang} onChange={value=>switchSelection(value,session.profileId)}/></div></header>
+ <header className={`${styles.header} theatre-darkbar`}><Link href={"/?lang="+session.lang+(session.profileId?"&profile="+encodeURIComponent(session.profileId):"")} className={styles.brand}>{text.brand}</Link><a className={styles.source} href={source.url} target="_blank" rel="noreferrer">{source.labels[session.lang].title} ↗</a><div className={styles.identity}><ProfileArt profileId={session.profileId} label={card?.name??text.general} className={styles.avatar}/><ProfilePicker cards={cards} profileId={session.profileId} lang={session.lang} onChange={id=>switchSelection(session.lang,id)}/><LanguagePicker lang={session.lang} onChange={value=>switchSelection(value,session.profileId)}/></div></header>
  <main className={styles.canvas}>
   <div className={styles.video}><YouTubePlayer key={source.id} ref={player} videoId={source.youtubeId} initialMs={initialMs} durationMs={source.durationMs} lang={session.lang} autoplay={autoplay} controlsTarget={controlsTarget} onTime={setCurrentMs} onSeekPending={onSeekPending}/></div>
   <div className={styles.transcript}>{transcript?.lang===session.lang?<TranscriptPanel transcript={transcript} english={english} lang={session.lang} currentMs={currentMs} concepts={concepts} onSeek={seek} onConcept={askQuestion} onDump={dump}/>:<section className="panel" role="status"><p>{lang!==session.lang?text.pending:text.translationUnavailable}</p></section>}</div>
@@ -86,6 +86,6 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
   <div className={styles.dump}><AskBox lang={session.lang} question={session.question} pending={pending} disabled={seekPending} inputRef={input} onChange={question=>update({type:"question",question})} onSubmit={()=>askQuestion(current.current.question)} onCancel={abort}/><Button variant="secondary" label={text.explainMoment} isDisabled={pending||seekPending} onClick={explain}/><p className={styles.note}>{text.nativeReview}</p><p className={styles.note}>{text.keyboard}</p></div>
  </main>
  {review&&<TimingOverlay sourceId={source.id} transcript={english} currentMs={currentMs} activeId={english.sentences[activeSentenceAt(english.sentences,currentMs)]?.id??null} lang={session.lang} disabled={seekPending} getTime={()=>player.current?.getTimeMs()??currentMs} onSaved={()=>router.refresh()}/>}
- <footer className={styles.footer}><div ref={setControlsTarget} className={styles.transport}/><Button variant="secondary" size="sm" label={text.returnAsked} isDisabled={session.askedAtMs===null} onClick={()=>{if(current.current.askedAtMs!==null)seek(current.current.askedAtMs);}}/><Button variant="secondary" size="sm" label={text.returnTalk} onClick={returnTalk}/></footer>
+ <footer className={`${styles.footer} theatre-darkbar`}><div ref={setControlsTarget} className={styles.transport}/><Button variant="secondary" size="sm" label={text.returnAsked} isDisabled={session.askedAtMs===null} onClick={()=>{if(current.current.askedAtMs!==null)seek(current.current.askedAtMs);}}/><Button variant="secondary" size="sm" label={text.returnTalk} onClick={returnTalk}/></footer>
  </div>;
 }
