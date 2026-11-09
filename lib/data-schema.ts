@@ -1,12 +1,25 @@
 import { z } from "zod";
 export const LangSchema = z.enum(["en", "es"]);
 const Ms = z.number().int().nonnegative();
-export const SentenceSchema = z.object({ id: z.string().min(1), startMs: Ms, endMs: Ms, text: z.string().min(1), raw: z.string(), chapter: z.number().int().nonnegative(), timing: z.enum(["derived", "reviewed"]) });
-export const TranscriptSchema = z.object({ sourceId: z.string().min(1), lang: LangSchema, durationMs: Ms.positive(), chapters: z.array(z.object({ startMs: Ms, title: z.string().min(1) })).min(1), sentences: z.array(SentenceSchema).min(1), machineTranslated: z.boolean(), reviewed: z.boolean() }).superRefine((t, ctx) => {
+const WordTimingSchema = z.object({ text: z.string().min(1), startMs: Ms, endMs: Ms });
+const TimedGlossSchema = z.object({ id: z.string().min(1), term: z.string().min(1).max(100), text: z.string().min(1).max(500), startMs: Ms, endMs: Ms, cites: z.array(z.string().min(1)).min(1).max(8) });
+export const SentenceSchema = z.object({ id: z.string().min(1), startMs: Ms, endMs: Ms, text: z.string().min(1), raw: z.string(), chapter: z.number().int().nonnegative(), timing: z.enum(["derived", "reviewed"]), words: z.array(WordTimingSchema).min(1).optional() });
+export const TranscriptSchema = z.object({ sourceId: z.string().min(1), lang: LangSchema, durationMs: Ms.positive(), chapters: z.array(z.object({ startMs: Ms, title: z.string().min(1) })).min(1), sentences: z.array(SentenceSchema).min(1), machineTranslated: z.boolean(), reviewed: z.boolean(), glosses: z.array(TimedGlossSchema).max(100).optional() }).superRefine((t, ctx) => {
   const ids = new Set<string>();
   for (const [i, s] of t.sentences.entries()) {
     if (ids.has(s.id) || s.endMs <= s.startMs || s.endMs > t.durationMs || (i > 0 && s.startMs < t.sentences[i - 1]!.endMs) || !t.chapters[s.chapter]) ctx.addIssue({ code: "custom", path: ["sentences", i], message: "Invalid sentence interval, identity, or chapter" });
     ids.add(s.id);
+    if (s.words) {
+      if (s.words.map(word => word.text).join("") !== s.text) ctx.addIssue({ code: "custom", path: ["sentences", i, "words"], message: "Aligned words must preserve the complete caption" });
+      for (const [j, word] of s.words.entries()) {
+        if (word.startMs < s.startMs || word.endMs > s.endMs || word.endMs <= word.startMs || (j > 0 && word.startMs < s.words[j - 1]!.endMs)) ctx.addIssue({ code: "custom", path: ["sentences", i, "words", j], message: "Invalid aligned word interval" });
+      }
+    }
+  }
+  const glossIds = new Set<string>();
+  for (const [i, gloss] of (t.glosses ?? []).entries()) {
+    if (glossIds.has(gloss.id) || gloss.endMs <= gloss.startMs || gloss.endMs > t.durationMs) ctx.addIssue({ code: "custom", path: ["glosses", i], message: "Invalid prepared definition interval or identity" });
+    glossIds.add(gloss.id);
   }
 });
 const SourceUrl = z.string().url().refine((s) => { const u = new URL(s); return u.protocol === "https:" && ["www.youtube.com", "www.databricks.com"].includes(u.hostname); }, "Unsupported source URL");

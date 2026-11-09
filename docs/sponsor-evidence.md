@@ -19,6 +19,8 @@ Hybrid is the recorded app mode: reranking did not improve top-three support in 
 
 Public implementation/method: [index preparation](../scripts/index-elastic.ts) and [retrieval modes](../lib/search.ts). The [current check](../scripts/check-retrieval.ts) uses four English and Spanish queries; its results have not been measured. The earlier eight-query check and detailed measurement records remain in the prior code revision and private `data/evidence/retrieval.json` and `data/evidence/elastic.json`; neither evidence file is a public dataset. No retrieval rerun was performed for this documentation update.
 
+The theatre candidate processes the supplied audio and includes 45 bilingual prepared, source-cited definitions. Alignment preserves uncertain original intervals rather than inventing word precision. Fifty existing talk documents received timestamp-only partial updates; all returned 200, and all 63 talk chunks matched the updated canonical timestamps afterward. No semantic-text field, new index or re-embedding request was sent.
+
 ## Gitar — actual feature reviews and addressed findings
 
 [Core tutor PR #2](https://github.com/MontereySand/conference-tutor/pull/2) was checked at exact head `ffc507e47f60ba89fcf4b610b21cf1484823e7e0` and merged on November 9 at 20:57:20 UTC as [007c90baee403ac69f2da005defb741ac31b3e8d](https://github.com/MontereySand/conference-tutor/commit/007c90baee403ac69f2da005defb741ac31b3e8d), preserving ancestry.
@@ -30,6 +32,8 @@ Public implementation/method: [index preparation](../scripts/index-elastic.ts) a
 The approval above is Gitar's summary/check, not a formal GitHub `reviewDecision` approval (that field was empty). The signed-in installation was separately restricted to this repository.
 
 [Integrated finish PR #3](https://github.com/MontereySand/conference-tutor/pull/3) passed [CI](https://github.com/MontereySand/conference-tutor/actions/runs/42709196236/job/129473909923) and [Gitar](https://github.com/MontereySand/conference-tutor/runs/129473894711) at `24f0dac0dfa5b2d54e5b8ff038d578390a6c0072`, then merged as `e7a4da369827a988dc0c3b9bddbcf453d2fa44e0`. Gitar identified a shared login allowance that could lock out every judge. Auto-apply was enabled and pushed a per-forwarded-IP patch, then paused because the proxy header's trust was unproved. The final reviewed replacement instead requires a generated high-entropy bearer credential, ignores forwarded IPs and removes the shared login counter. It retains bounded bodies, constant-time comparison, origin/host checks and secure sessions; no volumetric DoS protection is claimed. The [rationale](https://github.com/MontereySand/conference-tutor/pull/3#issuecomment-6752789777) corrects Gitar's stale dashboard description. Automated approval is not a substitute for inspecting its patch.
+
+[Release evidence PR #4](https://github.com/MontereySand/conference-tutor/pull/4) subsequently received a whitespace-only auto-applied patch, inspected against its parent, and passed CI with Gitar's approved summary. Review and CI auto-apply are enabled. Repository guidance limits review fixes to low-risk changes, but is not an enforced security boundary; exact-head inspection remains required.
 
 ## Dash0 — received telemetry and actual Agent0 analysis
 
@@ -54,6 +58,8 @@ The [image workflow](https://github.com/MontereySand/conference-tutor/actions/ru
 Actual HTTPS checks covered anonymous HTML/RSC/API isolation, wrong/correct passcodes, Secure/HttpOnly/SameSite=Lax cookies and foreign/missing-Origin rejection. An authenticated browser searched a moment, played the original YouTube video, received an English cited lesson, followed its citation to 687s, then returned to its saved 724.097s position and resumed playback. These are bounded functional observations, not human approval of UI design or timing accuracy.
 
 ## Release and review limitations
+
+The new Intro → Learn candidate passed 109 Vitest cases, 30 hosted-deployment checks, lint, production build and type checking locally. Browser checks covered the profile fan and real search, a 16:9 four-panel canvas, caption selection/annotation, and a genuine cited answer while video continued. Correction and Spanish regeneration preserved the original question timestamp as the player advanced. These are new local checks, not proof that this candidate is already deployed or reviewed by Gitar. The earlier deployed revision above remains the hosting baseline until cutover.
 
 - The event judge environment expires November 13, 2026. Hosting, anonymous image retrieval and HTTPS checks are verified; private delivery of the judge credential is still being arranged. No credential is published.
 - Spanish translations are machine-generated and not native-reviewed. Unreviewed sentence intervals remain derived; the human timing target has not been established. Review of all 14 minimized cards is also pending.

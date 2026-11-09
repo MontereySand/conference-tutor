@@ -19,14 +19,14 @@ export function sessionReducer(state: Session, action: SessionAction): Session {
       const sourceChanged = state.sourceId !== action.sourceId;
       const profileChanged = state.profileId !== action.profileId;
       if (!sourceChanged && !profileChanged && state.lang === action.lang) return state;
-      if (sourceChanged || profileChanged) return {...createSession(action.sourceId,action.profileId,action.lang),version:state.version+1};
+      if (sourceChanged || profileChanged) return {...createSession(action.sourceId,action.profileId,action.lang),question:sourceChanged?"":state.question,version:state.version+1};
       const queuedRequest = state.queuedRequest ?? (state.pending || state.error ? state.lastRequest
         : state.result && state.resultQuestion ? {requestKind:"regenerate" as const,question:state.resultQuestion,corrections:state.corrections} : null);
       return {...state,lang:action.lang,version:state.version+1,pending:null,queuedRequest,error:null,history:[]};
     }
     case "question": return {...state,question:action.question};
-    case "bookmark": return {...state,askedAtMs:action.ms,wasPlaying:action.wasPlaying};
-    case "begin": return {...state,question:action.request.question,pending:action.key,lastRequest:action.request,queuedRequest:null,error:null,corrections:action.request.corrections};
+    case "bookmark": return {...state,askedAtMs:action.ms,wasPlaying:action.wasPlaying,result:null,resultQuestion:null};
+    case "begin": return {...state,pending:action.key,lastRequest:action.request,queuedRequest:null,error:null,corrections:action.request.corrections};
     case "result": {
       if (!state.pending || !state.lastRequest || !sameTurn(state.pending,action.result.turnKey)) return state;
       const question = state.lastRequest.question;

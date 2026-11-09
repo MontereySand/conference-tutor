@@ -1,0 +1,62 @@
+.lesson,
+.dump {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  color: #161616;
+  background: #f5f4f1;
+  overflow-wrap: anywhere;
+}
+
+.lesson {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.dump {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  height: auto;
+  padding: .75rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .5rem;
+  border-bottom: 1px solid #bcbcb8;
+  padding-bottom: .55rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.header small { font-variant-numeric: tabular-nums; }
+.hint { margin: 0; color: #454545; font-size: .875rem; line-height: 1.45; }
+.dumpField { width: 100%; min-width: 0; }
+.dumpField textarea { min-height: 3rem; resize: vertical; }
+.actions, .citations { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.content { display: grid; gap: .9rem; }
+.content section { min-width: 0; }
+.content h3, .content h4 { margin: 0 0 .35rem; font-size: .85rem; font-weight: 650; }
+.content p { margin: 0; line-height: 1.5; }
+.answer { font-size: 1rem; }
+.citations { margin-top: .35rem; }
+.citationLink { color: inherit; text-decoration: underline; text-underline-offset: .15em; }
+.bounded { border-top: 1px solid #bcbcb8; padding-top: .75rem; }
+.bounded > div + div { margin-top: .5rem; }
+.steps { margin: .5rem 0 0; padding-left: 1.4rem; display: grid; gap: .7rem; }
+.disclosure { min-width: 0; }
+.disclosure :global(.astryx-collapsible-trigger) { width: 100%; min-width: 0; height: auto; white-space: normal; text-align: left; }
+.predictionTrigger { display: grid; gap: .2rem; min-width: 0; text-align: left; }
+.predictionBody { display: grid; gap: .6rem; min-width: 0; padding-top: .6rem; }
+.previous { border-left: 2px solid #363636; padding-left: .6rem; font-size: .85rem; font-weight: 600; }

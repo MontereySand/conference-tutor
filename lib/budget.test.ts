@@ -27,6 +27,6 @@ test("twentieth call is allowed but the next call in the minute is refused", () 
   expect(() => budget.admit("decision", 0.002, now + 60000)).not.toThrow();
 });
 test("speech is billed by duration and invalid usage is refused", () => {
-  expect(costOf("transcription", { seconds: 30 })).toBeCloseTo(0.00225);
+  expect(costOf("transcription", { seconds: 30 })).toBeCloseTo(0.003);
   expect(() => costOf("translation", { inputTokens: -1 })).toThrow("Invalid usage");
 });

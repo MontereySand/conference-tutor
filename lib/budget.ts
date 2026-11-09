@@ -12,7 +12,7 @@ type Entry = z.infer<typeof EntrySchema>;
 export function costOf(kind: PaidKind, usage: Usage): number {
   const values = Object.values(usage).filter((v) => typeof v === "number");
   if (values.some((v) => !Number.isFinite(v) || v < 0)) throw new Error("Invalid usage");
-  if (kind === "transcription") return (usage.seconds ?? 0) * 0.0045 / 60;
+  if (kind === "transcription") return (usage.seconds ?? 0) * 0.006 / 60;
   if (kind === "narration") return ((usage.inputTokens ?? 0) * 0.60 + (usage.audioOutputTokens ?? 0) * 20) / 1e6;
   if (kind === "embedding") return (usage.inputTokens ?? 0) * 0.02 / 1e6;
   return ((usage.inputTokens ?? 0) * (usage.fast ? 0.20 : 0.10) + (usage.outputTokens ?? 0) * (usage.fast ? 1 : 0.50)) / 1e6;
