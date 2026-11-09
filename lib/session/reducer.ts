@@ -24,9 +24,12 @@ export function sessionReducer(state: Session, action: SessionAction): Session {
     case "question": return {...state,question:action.question};
     case "bookmark": return {...state,askedAtMs:action.ms,wasPlaying:action.wasPlaying};
     case "begin": return {...state,pending:action.key,error:null,corrections:action.corrections};
-    case "result":
+    case "result": {
       if (!state.pending || !sameTurn(state.pending,action.result.turnKey)) return state;
-      return {...state,pending:null,result:action.result,error:null,corrections:action.result.corrections,history:[...state.history,{question:action.question.slice(0,2000),answer:action.result.lesson.answer.slice(0,2000)}].slice(-2)};
+      const answer = (action.result.lesson.answer || action.result.lesson.boundary?.reason || "").slice(0,2000);
+      const history = answer ? [...state.history,{question:action.question.slice(0,2000),answer}].slice(-2) : state.history;
+      return {...state,pending:null,result:action.result,error:null,corrections:action.result.corrections,history};
+    }
     case "error": return state.pending && sameTurn(state.pending,action.key) ? {...state,pending:null,error:action.error} : state;
     case "cancel": return {...state,pending:null};
   }

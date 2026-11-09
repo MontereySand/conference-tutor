@@ -34,6 +34,12 @@ describe("session isolation",()=>{
     expect(state.askedAtMs).toBeNull();
     expect(state.result).toBeNull();
   });
+  it("keeps an unsupported-question boundary as usable follow-up history",()=>{
+    const boundaryResult:AskResult={...result,lesson:{...result.lesson,answer:"",cites:[],boundary:{reason:"The invented source does not report that statistic.",nearbyQuestion:"What does it describe?"}}};
+    let state=sessionReducer(createSession("invented",null,"en"),{type:"begin",key,corrections:result.corrections});
+    state=sessionReducer(state,{type:"result",result:boundaryResult,question:"Which percentage?"});
+    expect(state.history).toEqual([{question:"Which percentage?",answer:boundaryResult.lesson.boundary!.reason}]);
+  });
   it("bookmarks each new question without losing its original playback state",()=>{
     let state=createSession("invented",null,"en");
     state=sessionReducer(state,{type:"bookmark",ms:1200,wasPlaying:true});

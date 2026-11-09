@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFile, writeFile, rename, unlink } from "node:fs/promises";
 import { z } from "zod";
 import { getSource, getTranscript, preparedPath } from "@/lib/data";
-import { HttpError, apiError, requireSameOrigin } from "@/lib/http";
+import { HttpError, apiError, requireSameOrigin, parseJson } from "@/lib/http";
 export const runtime="nodejs";
 const Mark=z.object({sourceId:z.string().min(1).max(100),sentenceId:z.string().min(1).max(200),startMs:z.number().int().nonnegative()}).strict();
 let writing:Promise<unknown>=Promise.resolve();
@@ -10,8 +10,7 @@ export async function POST(request:Request){
  if(process.env.NODE_ENV!=="development")return new Response(null,{status:404});
  try{
   requireSameOrigin(request);
-  const raw=await request.text();if(raw.length>4096)throw new HttpError(400,"invalid");
-  let input:z.infer<typeof Mark>;try{input=Mark.parse(JSON.parse(raw));}catch{throw new HttpError(400,"invalid");}
+  const input=await parseJson(request,Mark,4096);
   const operation=writing.catch(()=>{}).then(async()=>{
    const source=getSource(input.sourceId);if(!source?.ready)throw new HttpError(400,"invalid");
    const transcript=getTranscript(source.id,"en");if(!transcript)throw new HttpError(400,"invalid");

@@ -1,7 +1,7 @@
 import type { Client, estypes } from "@elastic/elasticsearch";
 import type { Chunk, Lang } from "./types.ts";
 import { IndexedChunkSchema } from "./data-schema.ts";
-export type SearchMode = "lexical" | "semantic" | "hybrid";
+export type SearchMode = "lexical" | "semantic" | "hybrid" | "rerank";
 export type IndexedChunk = { chunk_id: string; source_id: string; kind: "talk" | "reference"; title: string; url: string; chapter?: string; start_ms?: number; end_ms?: number; sentence_ids?: string[]; text: string; text_hi?: string; text_es?: string; text_zh?: string };
 export function toChunk(row: IndexedChunk): Chunk {
   return { chunkId: row.chunk_id, sourceId: row.source_id, kind: row.kind, title: row.title, url: row.url, chapter: row.chapter, startMs: row.start_ms, endMs: row.end_ms, sentenceIds: row.sentence_ids, text: row.text, text_hi: row.text_hi, text_es: row.text_es, text_zh: row.text_zh };
@@ -28,8 +28,15 @@ export async function searchPrepared(client: Client, options: { question: string
     const result = await client.search<IndexedChunk>({ index: "ct-passages", size: count, query: value, _source: { excludes: ["text_semantic"] } }, { signal });
     return result.hits.hits.flatMap((h) => h._source ? [toChunk(IndexedChunkSchema.parse(h._source))] : []);
   };
-  if (mode !== "hybrid") return query(mode === "lexical" ? lexical : semantic, size);
-  if (!nativeRrf) return fuseRanks(await Promise.all([query(lexical, 30), query(semantic, 30)]), size);
-  const result = await client.search<IndexedChunk>({ index: "ct-passages", size, _source: { excludes: ["text_semantic"] }, retriever: { rrf: { retrievers: [{ standard: { query: lexical } }, { standard: { query: semantic } }], rank_window_size: 30, rank_constant: 60 } } }, { signal });
+  if (mode === "lexical" || mode === "semantic") return query(mode === "lexical" ? lexical : semantic, size);
+  if (!nativeRrf) {
+    if (mode === "rerank") throw new Error("Reranking unavailable without native RRF");
+    return fuseRanks(await Promise.all([query(lexical, 30), query(semantic, 30)]), size);
+  }
+  const rrf: estypes.RetrieverContainer = { rrf: { retrievers: [{ standard: { query: lexical } }, { standard: { query: semantic } }], rank_window_size: 30, rank_constant: 60 } };
+  const retriever: estypes.RetrieverContainer = mode === "rerank"
+    ? { text_similarity_reranker: { retriever: rrf, field: "text", inference_id: ".jina-reranker-v3", inference_text: question, rank_window_size: 30 } }
+    : rrf;
+  const result = await client.search<IndexedChunk>({ index: "ct-passages", size, _source: { excludes: ["text_semantic"] }, retriever }, { signal });
   return result.hits.hits.flatMap((h) => h._source ? [toChunk(IndexedChunkSchema.parse(h._source))] : []);
 }

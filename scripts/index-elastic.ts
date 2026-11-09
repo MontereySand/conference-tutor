@@ -3,7 +3,6 @@ import { readFileSync, readdirSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
 import { ChunkSchema } from "../lib/data-schema.ts";
-import { getBudget } from "../lib/budget.ts";
 import { searchPrepared } from "../lib/search.ts";
 function errorStatus(error: unknown): number | undefined { return error instanceof errors.ResponseError ? error.statusCode ?? undefined : undefined; }
 const ElasticErrorBody = z.object({ error: z.object({ type: z.string().optional(), reason: z.string().optional() }) });
@@ -17,17 +16,7 @@ async function main() {
     try { await client.inference.get({ inference_id: id }); inferenceId = id; break; }
     catch (error) { if (errorStatus(error) !== 404) throw error; }
   }
-  if (!inferenceId) {
-    if (!process.env.OPENAI_API_KEY) throw new Error("Neither Jina endpoint exists and OpenAI fallback key is missing");
-    inferenceId = "ct-openai-embeddings";
-    try { await client.inference.get({ inference_id: inferenceId }); }
-    catch (error) {
-      if (errorStatus(error) !== 404) throw error;
-      await client.inference.put({ task_type: "text_embedding", inference_id: inferenceId, inference_config: { service: "openai", service_settings: { api_key: process.env.OPENAI_API_KEY, model_id: "text-embedding-3-small", dimensions: 1536 } } });
-    }
-    // Elastic does not return provider token usage; keep a conservative charged hold.
-    getBudget().admit("embedding", 0.01);
-  }
+  if (!inferenceId) throw new Error("Jina embedding endpoint unavailable; no provider substitution");
   const name = "ct-passages-v1";
   if (!(await client.indices.exists({ index: name }))) await client.indices.create({ index: name, mappings: { properties: {
     chunk_id: { type: "keyword" }, source_id: { type: "keyword" }, kind: { type: "keyword" }, chapter: { type: "keyword" }, url: { type: "keyword", index: false }, start_ms: { type: "long" }, end_ms: { type: "long" }, sentence_ids: { type: "keyword" }, title: { type: "text" }, text: { type: "text", analyzer: "english" }, text_hi: { type: "text", analyzer: "hindi" }, text_es: { type: "text", analyzer: "spanish" }, text_zh: { type: "text", analyzer: "cjk" }, text_semantic: { type: "semantic_text", inference_id: inferenceId },
