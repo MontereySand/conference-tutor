@@ -74,8 +74,8 @@ try {
   requireValue(stringData.JUDGE_ACCESS_CODE.trim().length >= 16, 'JUDGE_ACCESS_CODE must have at least 16 characters');
   requireValue(stringData.JUDGE_SESSION_SECRET.trim().length >= 32, 'JUDGE_SESSION_SECRET must have at least 32 characters');
   for (const key of ['JUDGE_ACCESS_CODE', 'JUDGE_SESSION_SECRET']) {
-    requireValue(/^[A-Za-z0-9_-]+$/.test(stringData[key]) && new Set(stringData[key]).size >= 8,
-      `${key} must be a generated base64url value with at least eight distinct characters`);
+    requireValue(stringData[key].length <= 256 && /^[A-Za-z0-9_-]+$/.test(stringData[key]) && new Set(stringData[key]).size >= 8,
+      `${key} must be a generated base64url value of at most 256 characters with at least eight distinct characters`);
   }
   requireValue(stringData.JUDGE_ACCESS_CODE !== stringData.JUDGE_SESSION_SECRET, 'Judge code and session secret must be independent');
   requireValue(stringData.PUBLIC_APP_ORIGIN === origin, 'PUBLIC_APP_ORIGIN must exactly match the team HTTPS origin');
@@ -176,6 +176,8 @@ try {
   const selector = { [ownerKey]: owner, [releaseKey]: release };
   const serviceSpec = { selector, ports: [{ name: 'http', port: 80, targetPort: 3000, protocol: 'TCP' }] };
   if (service) {
+    // Merge-patch retains map keys unless null removes them; discard the starter selector.
+    serviceSpec.selector = { ...Object.fromEntries(Object.keys(service.spec.selector ?? {}).map(key => [key, null])), ...selector };
     // Patch only this approved entrypoint; retain its IP, annotations and unrelated metadata.
     kubectl(['patch', 'service', 'app', '--type=merge', '--patch-file=/dev/stdin'], {
       metadata: { labels: { [ownerKey]: owner, 'app.kubernetes.io/name': 'conference-tutor' } }, spec: serviceSpec,

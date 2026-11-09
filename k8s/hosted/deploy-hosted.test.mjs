@@ -41,16 +41,33 @@ const input = fs.readFileSync(0, 'utf8');
 fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args, cmd, input: input ? JSON.parse(input) : null }) + '\\n');
 const stateFile = process.env.FAKE_LOG + '.state';
 const state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, 'utf8')) : {};
+if (process.env.FAKE_STARTER && !state['service/app']) state['service/app'] = {
+  metadata: { name: 'app', labels: { preserved: 'label' }, annotations: { preserved: 'annotation' } },
+  spec: { type: 'ClusterIP', clusterIP: '10.0.0.1', selector: { app: 'starter', component: 'web' } },
+};
+function merge(target, patch) {
+  if (patch === null || typeof patch !== 'object' || Array.isArray(patch)) return patch;
+  const result = { ...target };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete result[key];
+    else result[key] = merge(result[key], value);
+  }
+  return result;
+}
 function out(value) { process.stdout.write(JSON.stringify(value)); }
 if (cmd[0] === 'config') out({ clusters: [{ cluster: { server: process.env.FAKE_SERVER || 'https://fixture.vc.cnh.radarhq.io' } }] });
 else if (cmd[0] === 'get' && cmd[1] === 'namespace') out({ metadata: { name: cmd[2] } });
-else if (cmd[0] === 'get' && cmd[1] === 'service' && process.env.FAKE_STARTER) out({ metadata: { name: 'app' }, spec: { type: 'ClusterIP', selector: { app: 'starter' } } });
 else if (cmd[0] === 'get') {
   const resource = state[cmd[1] + '/' + cmd[2]];
   if (resource) out({ ...resource, metadata: { ...resource.metadata, generation: 1 }, status: { readyReplicas: 1, updatedReplicas: 1, observedGeneration: 1 } });
 } else if (cmd[0] === 'apply' || cmd[0] === 'create') {
   const value = JSON.parse(input);
   state[value.kind.toLowerCase() + '/' + value.metadata.name] = value;
+  fs.writeFileSync(stateFile, JSON.stringify(state));
+} else if (cmd[0] === 'patch') {
+  if (!cmd.includes('--type=merge')) throw new Error('Fixture supports only JSON merge-patch');
+  const key = cmd[1] + '/' + cmd[2];
+  state[key] = merge(state[key], JSON.parse(input));
   fs.writeFileSync(stateFile, JSON.stringify(state));
 } else if (cmd[0] === 'rollout' && process.env.FAKE_FAIL_ROLLOUT) {
   process.stderr.write('private payload must not be relayed'); process.exitCode = 1;
@@ -62,7 +79,8 @@ else if (cmd[0] === 'get') {
       env: { ...process.env, PATH: `${root}:${process.env.PATH}`, FAKE_LOG: log, ...overrides },
     });
     const calls = (() => { try { return readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); } catch { return []; } })();
-    return { ...result, calls };
+    const state = (() => { try { return JSON.parse(readFileSync(log + '.state', 'utf8')); } catch { return {}; } })();
+    return { ...result, calls, state };
   }
   return { run, json, data };
 }
@@ -80,6 +98,17 @@ test('requires hosted auth and exact origin before uploading anything', async t 
     await t.test(env.split('=')[0], child => {
       const result = fixture(child, { env: `${env}\n` }).run();
       assert.equal(result.status, 1);
+      assert.equal(mutations(result.calls).length, 0);
+    });
+  }
+});
+
+test('rejects credentials longer than the runtime gate accepts before any mutation', async t => {
+  for (const key of ['JUDGE_ACCESS_CODE', 'JUDGE_SESSION_SECRET']) {
+    await t.test(key, child => {
+      const result = fixture(child, { env: `${key}=${'Abcdef0123456789_'.repeat(17)}\n` }).run();
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /at most 256 characters/);
       assert.equal(mutations(result.calls).length, 0);
     });
   }
@@ -119,6 +148,11 @@ test('splits allowlisted private inputs and gates starter cutover on readiness',
   const patchIndex = result.calls.findIndex(call => call.cmd[0] === 'patch');
   assert.ok(rolloutIndex >= 0 && patchIndex > rolloutIndex);
   assert.deepEqual(result.calls[patchIndex].input.spec.ports, [{ name: 'http', port: 80, targetPort: 3000, protocol: 'TCP' }]);
+  const entrypoint = result.state['service/app'];
+  assert.deepEqual(entrypoint.spec.selector, deployment.spec.selector.matchLabels);
+  assert.equal(entrypoint.spec.clusterIP, '10.0.0.1');
+  assert.equal(entrypoint.metadata.labels.preserved, 'label');
+  assert.equal(entrypoint.metadata.annotations.preserved, 'annotation');
   assert.ok(!result.calls.some(call => ['delete', 'scale'].includes(call.cmd[0])));
   for (const call of result.calls.slice(1)) {
     assert.ok(call.args.includes('--kubeconfig'));
