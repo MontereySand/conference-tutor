@@ -6,9 +6,18 @@ export class HttpError extends Error {
 export function requireSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   const url = new URL(request.url);
-  const host = request.headers.get("host");
-  const expected = process.env.PUBLIC_APP_ORIGIN?.trim() || (host ? url.protocol + "//" + host : url.origin);
-  if (!origin || origin !== expected) throw new HttpError(403, "origin");
+  const configured = process.env.PUBLIC_APP_ORIGIN?.trim();
+  let allowed: string[];
+  if (configured) {
+    let publicUrl: URL;
+    try { publicUrl = new URL(configured); } catch { throw new HttpError(503, "setup"); }
+    if (publicUrl.protocol !== "https:" || publicUrl.origin !== configured || publicUrl.username || publicUrl.password) throw new HttpError(503, "setup");
+    allowed = [configured];
+  } else {
+    const port = url.port ? ":" + url.port : "";
+    allowed = ["localhost", "127.0.0.1", "[::1]"].map((host) => url.protocol + "//" + host + port);
+  }
+  if (!origin || !allowed.includes(origin)) throw new HttpError(403, "origin");
 }
 export async function parseJson<T>(request: Request, schema: z.ZodType<T>, maxBytes = 32000): Promise<T> {
   const reader = request.body?.getReader();

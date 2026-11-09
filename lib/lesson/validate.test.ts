@@ -14,6 +14,12 @@ test("cross-source steps and invalid reference notes and predictions are removed
   const result = validate({ ...base, steps: [{ text: "Wrong source", cites: ["other"] }], referenceNotes: [{ refChunkId: "t1", text: "Not a reference" }], prediction: { prompt: "What changes?", expected: "Invented", cites: ["other"] } });
   expect(result.answer).toBe(base.answer); expect(result.steps).toEqual([]); expect(result.referenceNotes).toEqual([]); expect(result.prediction).toBeNull();
 });
+test("reference evidence remains separately attributed and cannot support talk claims or predictions", () => {
+  const note = { refChunkId: "r1", text: "The invented reference adds context." };
+  const result = validate({ ...base, cites: ["r1"], steps: [{ text: "Reference-only claim", cites: ["r1"] }], referenceNotes: [note], prediction: { prompt: "What changes?", expected: "Invented", cites: ["r1"] } });
+  expect(result.answer).toBe(""); expect(result.steps).toEqual([]); expect(result.prediction).toBeNull();
+  expect(result.referenceNotes).toEqual([note]); expect(result.boundary).not.toBeNull();
+});
 test("General and missing anchors cannot produce a profile bridge", () => {
   const lesson = { ...base, bridge: { anchorId: "missing", text: "A bridge", limit: "A limit" } };
   expect(validate(lesson).bridge).toBeNull();

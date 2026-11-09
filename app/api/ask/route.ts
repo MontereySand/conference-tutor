@@ -51,7 +51,9 @@ export async function POST(request: Request) {
       span.setAttributes({ "ct.served_tier": response.service_tier ?? "unknown", "ct.input_tokens": response.usage?.input_tokens ?? 0, "ct.output_tokens": response.usage?.output_tokens ?? 0 });
       return response;
     });
-    const parsed = LessonSchema.parse(result.output_parsed);
+    const checked = LessonSchema.safeParse(result.output_parsed);
+    if (!checked.success) throw new HttpError(502, "unavailable");
+    const parsed = checked.data;
     const { lesson, validCitations } = validateLesson(parsed, evidence, sourceIds, card, corrections, turnKey.lang);
     const fast = result.service_tier === "fast" || result.service_tier === "priority";
     const costUsd = result.usage ? getBudget().record(hold, { inputTokens: result.usage.input_tokens, outputTokens: result.usage.output_tokens, fast }) : hold.maxUsd;
