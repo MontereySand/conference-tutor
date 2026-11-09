@@ -26,7 +26,7 @@ export async function withSpan<T>(name: string, attrs: Metadata, fn: (span: Span
         severityNumber: SeverityNumber.ERROR,
         severityText: "ERROR",
         context: context.active(),
-        attributes: { stage, "error.type": errorType, "request.id": attrs.requestId ?? span.spanContext().traceId },
+        attributes: { stage, "error.type": errorType, "ct.request_id": attrs["ct.request_id"] ?? attrs.requestId ?? span.spanContext().traceId },
       });
       throw error;
     } finally {
