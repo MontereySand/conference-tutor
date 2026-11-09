@@ -11,3 +11,16 @@ export function activeSentenceAt(sentences: Sentence[], ms: number): number {
   }
   return -1;
 }
+
+export function observePlayerClock(readSeconds: () => number, onTime: (ms: number) => void): () => void {
+  let lastMs: number | undefined;
+  const sample = () => {
+    const ms = readSeconds() * 1000;
+    if (!Number.isFinite(ms) || ms < 0 || ms === lastMs) return;
+    lastMs = ms;
+    onTime(ms);
+  };
+  sample();
+  const interval = setInterval(sample, 100);
+  return () => clearInterval(interval);
+}
