@@ -1,5 +1,10 @@
 import type { Messages } from "./en";
 export const zh: Messages = {
+  skipContent: "跳至主要内容",
+  answerHeading: "直接回答",
+  talkCitations: "来自本次演讲",
+  correctionsHeading: "调整这段讲解",
+  generalProfileNote: "基于来源的讲解，不使用个人背景类比。",
   loginTitle: "一个私密的探索空间。",
   loginIntro: "输入演示负责人提供的评委访问口令，打开已准备的演讲。",
   loginCode: "评委访问口令",

@@ -1,4 +1,9 @@
 export const en = {
+  skipContent: "Skip to content",
+  answerHeading: "Direct answer",
+  talkCitations: "From this talk",
+  correctionsHeading: "Adjust this explanation",
+  generalProfileNote: "Source-grounded explanations without a personal bridge.",
   loginTitle: "A private space to explore.",
   loginIntro: "Enter the judge passcode shared by the demo host to open the prepared talks.",
   loginCode: "Judge passcode",

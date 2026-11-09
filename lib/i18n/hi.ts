@@ -1,5 +1,10 @@
 import type { Messages } from "./en";
 export const hi: Messages = {
+  skipContent: "मुख्य सामग्री पर जाएँ",
+  answerHeading: "सीधा जवाब",
+  talkCitations: "इस वार्ता से",
+  correctionsHeading: "इस व्याख्या को बदलें",
+  generalProfileNote: "व्यक्तिगत तुलना के बिना, स्रोतों पर आधारित व्याख्याएँ।",
   loginTitle: "समझने के लिए एक निजी जगह।",
   loginIntro: "तैयार वार्ताएँ खोलने के लिए डेमो संचालक से मिला निर्णायक प्रवेश कोड डालें।",
   loginCode: "निर्णायक प्रवेश कोड",

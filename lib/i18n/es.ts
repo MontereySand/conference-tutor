@@ -1,5 +1,10 @@
 import type { Messages } from "./en";
 export const es: Messages = {
+  skipContent: "Saltar al contenido",
+  answerHeading: "Respuesta directa",
+  talkCitations: "De esta charla",
+  correctionsHeading: "Ajusta esta explicación",
+  generalProfileNote: "Explicaciones basadas en las fuentes, sin una analogía personal.",
   loginTitle: "Un espacio privado para explorar.",
   loginIntro: "Introduce el código de acceso que te compartió el anfitrión para abrir las charlas preparadas.",
   loginCode: "Código de acceso del jurado",
