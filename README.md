@@ -1,6 +1,6 @@
 # Conference tutor
 
-Understand a technical talk without stopping it. Elasticsearch is the source/retrieval layer; explanations stay tied to retrieved evidence. General mode or a supplied professional card changes the explanation, not source facts.
+Understand a technical talk without stopping it. Elasticsearch is the source/retrieval layer; explanations stay tied to retrieved evidence. General mode or a supplied professional card changes the explanation.
 
 Intro presents an overlapping fan of abstract profile cards, with the user's card last. Learn uses a theatre-style four-panel canvas: real 16:9 video, synchronized transcript, explanations and an editable Dump. The interface supports English and Spanish using official [Meta Astryx](https://github.com/meta/astryx) controls, IBM Plex Mono and Playfair Display. Selecting text, editing local caption annotations, asking questions and receiving answers leave playback running; transport and citation actions explicitly seek. Questions capture a bookmark, and retries/corrections retain that original context. Learner annotations never replace source evidence.
 Grounded steps and optional practice use progressive disclosure inspired by [LearnHarness](https://github.com/amosblomqvist/learnharness/tree/da08cb5f7d098598ba963c6689b22054c9f2a5a3): the direct answer remains visible; the expected practice answer appears only after an attempt or explicit Skip. Source support never becomes an invented explanation.
