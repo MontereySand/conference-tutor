@@ -72,11 +72,13 @@ export function validJudgeSession(cookie: string | undefined, config: HostedAcce
   return expires - issued === JUDGE_SESSION_SECONDS && issued <= seconds && expires > seconds;
 }
 
-// shortcut: one shared process window; use an ingress/distributed limiter before adding pods.
-let attemptWindow = { start: 0, count: 0 };
-export function admitAccessAttempt(now = Date.now()): boolean {
-  if (now - attemptWindow.start >= 60_000 || now < attemptWindow.start) attemptWindow = { start: now, count: 0 };
-  if (attemptWindow.count >= ACCESS_ATTEMPTS_PER_MINUTE) return false;
-  attemptWindow.count++;
+const attemptWindows = new Map<string, { start: number; count: number }>();
+export function admitAccessAttempt(client: string, now = Date.now()): boolean {
+  const window = attemptWindows.get(client);
+  const current = !window || now - window.start >= 60_000 || now < window.start ? { start: now, count: 0 } : window;
+  if (current.count >= ACCESS_ATTEMPTS_PER_MINUTE) return false;
+  current.count++;
+  attemptWindows.set(client, current);
+  if (attemptWindows.size > 10_000) attemptWindows.delete(attemptWindows.keys().next().value!);
   return true;
 }

@@ -12,7 +12,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(now);
   for (const [key, value] of Object.entries(env)) vi.stubEnv(key, value);
-  admitAccessAttempt(now - 60_000);
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.useRealTimers(); });
 
@@ -126,7 +125,7 @@ test("public exceptions remain narrow, and missing hosted configuration returns 
 
 test("login rejects foreign origins, oversized bodies and wrong passcodes; success sets a secure bounded cookie", async () => {
   const loginRequest = (body: string, origin: string | undefined = config.origin) => new Request(config.origin + "/api/access", {
-    method: "POST", headers: { "Content-Type": "application/json", ...(origin ? { origin } : {}) }, body,
+    method: "POST", headers: { "Content-Type": "application/json", "x-forwarded-for": "192.0.2.20", ...(origin ? { origin } : {}) }, body,
   });
   for (const origin of ["https://evil.example", ""]) expect((await POST(loginRequest(JSON.stringify({ code: config.code }), origin))).status).toBe(403);
   const oversized = await POST(loginRequest(JSON.stringify({ code: "x".repeat(4096) })));
@@ -147,13 +146,19 @@ test("login rejects foreign origins, oversized bodies and wrong passcodes; succe
   expect(await response.text()).not.toContain(config.code);
 });
 
-test("one-pod attempt admission is bounded and recovers at the next window", async () => {
-  for (let i = 0; i < ACCESS_ATTEMPTS_PER_MINUTE; i++) expect(admitAccessAttempt(now)).toBe(true);
-  expect(admitAccessAttempt(now)).toBe(false);
-  const response = await POST(new Request(config.origin + "/api/access", {
-    method: "POST", headers: { origin: config.origin, "content-type": "application/json" }, body: JSON.stringify({ code: config.code }),
-  }));
-  expect(response.status).toBe(429);
-  expect(response.headers.get("retry-after")).toBe("60");
-  expect(admitAccessAttempt(now + 60_000)).toBe(true);
+test("attempt admission is isolated by client and recovers at the next window", async () => {
+  const client = "192.0.2.10";
+  for (let i = 0; i < ACCESS_ATTEMPTS_PER_MINUTE; i++) expect(admitAccessAttempt(client, now)).toBe(true);
+  expect(admitAccessAttempt(client, now)).toBe(false);
+  expect(admitAccessAttempt("192.0.2.11", now)).toBe(true);
+
+  const request = (ip: string) => new Request(config.origin + "/api/access", {
+    method: "POST", headers: { origin: config.origin, "content-type": "application/json", "x-forwarded-for": ip },
+    body: JSON.stringify({ code: config.code }),
+  });
+  const limited = await POST(request(client));
+  expect(limited.status).toBe(429);
+  expect(limited.headers.get("retry-after")).toBe("60");
+  expect((await POST(request("192.0.2.11"))).status).toBe(200);
+  expect(admitAccessAttempt(client, now + 60_000)).toBe(true);
 });

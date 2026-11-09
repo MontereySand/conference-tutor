@@ -11,7 +11,8 @@ export async function POST(request: Request) {
     if (access.mode === "unavailable") throw new HttpError(503, "setup");
     requireSameOrigin(request);
     if (new URL(request.url).search) throw new HttpError(400, "invalid");
-    if (!admitAccessAttempt()) throw new HttpError(429, "rate");
+    const client = request.headers.get("x-forwarded-for")?.split(",", 1)[0].trim() || "unknown";
+    if (!admitAccessAttempt(client)) throw new HttpError(429, "rate");
     if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") throw new HttpError(415, "invalid");
     const { code } = await parseJson(request, Login, 4096);
     if (access.mode === "local") return NextResponse.json({ ok: true }, { headers: PRIVATE_HEADERS });
