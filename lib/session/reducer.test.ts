@@ -102,9 +102,28 @@ describe("session isolation",()=>{
     state=sessionReducer(state,{type:"question",question:"An edited draft"});
     expect(state.lastRequest).toEqual(failed);
     state=sessionReducer(state,{type:"begin",key:{...key,turnId:"retry"},request:state.lastRequest!});
-    expect(state.question).toBe(failed.question);
+    expect(state.question).toBe("An edited draft");
     expect(state.corrections).toEqual(failed.corrections);
     expect(state.error).toBeNull();
+  });
+  it("preserves edits while pending work and a locale replacement finish",()=>{
+    let state=sessionReducer(createSession("invented",null,"en"),{type:"begin",key,request});
+    state=sessionReducer(state,{type:"question",question:"New notes"});
+    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:null,lang:"es"});
+    const nextKey={...key,lang:"es" as const,version:state.version,turnId:"replacement"};
+    state=sessionReducer(state,{type:"begin",key:nextKey,request:state.queuedRequest!});
+    state=sessionReducer(state,{type:"result",result:{...result,turnKey:nextKey}});
+    expect(state.question).toBe("New notes");
+  });
+  it("keeps a draft across profile changes without retaining the previous profile's turn",()=>{
+    let state=sessionReducer(createSession("invented",null,"en"),{type:"begin",key,request});
+    state=sessionReducer(state,{type:"question",question:"Notes in progress"});
+    state=sessionReducer(state,{type:"switch",sourceId:"invented",profileId:"new-profile",lang:"en"});
+    expect(state.question).toBe("Notes in progress");
+    expect(state.pending).toBeNull();
+    expect(sessionReducer(state,{type:"result",result})).toBe(state);
+    state=sessionReducer(state,{type:"switch",sourceId:"another",profileId:"new-profile",lang:"en"});
+    expect(state.question).toBe("");
   });
   it("cancels queued locale work and clears it on source or profile changes",()=>{
     let state=sessionReducer(createSession("invented",null,"en"),{type:"begin",key,request});

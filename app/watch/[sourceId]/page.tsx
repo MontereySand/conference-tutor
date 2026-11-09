@@ -17,5 +17,5 @@ export default async function WatchPage({params,searchParams}:{params:Promise<{s
  const profileId=typeof query.profile==="string"&&data.cards.some(card=>card.id===query.profile)?query.profile:null;
  const seconds=typeof query.t==="string"?Number(query.t):0;
  const initialMs=Number.isFinite(seconds)?Math.max(0,Math.min(source.durationMs,seconds*1000)):0;
- return <WatchView key={source.id} source={source} transcript={data.transcript} english={data.english} cards={data.cards} concepts={data.concepts} lang={lang} profileId={profileId} initialMs={initialMs} review={process.env.NODE_ENV==="development"&&query.review==="1"}/>;
+ return <WatchView key={source.id} source={source} transcript={data.transcript} english={data.english} cards={data.cards} concepts={data.concepts} lang={lang} profileId={profileId} initialMs={initialMs} review={process.env.NODE_ENV==="development"&&query.review==="1"} autoplay={query.autoplay==="1"}/>;
 }
