@@ -25,7 +25,7 @@ export async function searchPrepared(client: Client, options: { question: string
   if (!sourceIds.length) return [];
   const { lexical, semantic } = retrievalQueries(question, lang, sourceIds);
   const query = async (value: estypes.QueryDslQueryContainer, count: number) => {
-    const result = await client.search<IndexedChunk>({ index: "ct-passages", size: count, query: value, _source: { excludes: ["text_semantic"] } }, { signal });
+    const result = await client.search<IndexedChunk>({ index: "ct-passages", size: count, query: value, _source: { excludes: ["text_semantic", "text_hi", "text_zh"] } }, { signal });
     return result.hits.hits.flatMap((h) => h._source ? [toChunk(IndexedChunkSchema.parse(h._source))] : []);
   };
   if (mode === "lexical" || mode === "semantic") return query(mode === "lexical" ? lexical : semantic, size);
@@ -37,6 +37,6 @@ export async function searchPrepared(client: Client, options: { question: string
   const retriever: estypes.RetrieverContainer = mode === "rerank"
     ? { text_similarity_reranker: { retriever: rrf, field: "text", inference_id: ".jina-reranker-v3", inference_text: question, rank_window_size: 30 } }
     : rrf;
-  const result = await client.search<IndexedChunk>({ index: "ct-passages", size, _source: { excludes: ["text_semantic"] }, retriever }, { signal });
+  const result = await client.search<IndexedChunk>({ index: "ct-passages", size, _source: { excludes: ["text_semantic", "text_hi", "text_zh"] }, retriever }, { signal });
   return result.hits.hits.flatMap((h) => h._source ? [toChunk(IndexedChunkSchema.parse(h._source))] : []);
 }
