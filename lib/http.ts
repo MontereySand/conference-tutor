@@ -5,7 +5,10 @@ export class HttpError extends Error {
 }
 export function requireSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) throw new HttpError(403, "origin");
+  const url = new URL(request.url);
+  const host = request.headers.get("host");
+  const expected = process.env.PUBLIC_APP_ORIGIN?.trim() || (host ? url.protocol + "//" + host : url.origin);
+  if (!origin || origin !== expected) throw new HttpError(403, "origin");
 }
 export async function parseJson<T>(request: Request, schema: z.ZodType<T>, maxBytes = 32000): Promise<T> {
   const reader = request.body?.getReader();
