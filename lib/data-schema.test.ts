@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { ProfileCardSchema, TranscriptSchema } from "./data-schema";
+import { ConceptSchema, ProfileCardSchema, TranscriptSchema } from "./data-schema";
 import type { Transcript } from "./types";
 
 function transcript(): Transcript {
@@ -39,4 +39,19 @@ it("accepts bounded embedded JPEG portraits but rejects remote and executable im
   for (const portrait of ["https://example.com/tracker.jpg", "data:image/svg+xml;base64,PHN2Zy8+", "javascript:alert(1)", "data:image/jpeg;base64," + "A".repeat(400_000)]) {
     expect(ProfileCardSchema.safeParse({ ...card, portrait }).success).toBe(false);
   }
+});
+
+it("validates bilingual prepared concepts and bounded unique source IDs", () => {
+  const text = { en: "Example", es: "Ejemplo" };
+  const prepared = { title: text, question: text, explanation: text, steps: { en: ["One"], es: ["Uno"] }, bridge: { tag: "example", text, limit: text }, sourceIds: ["a", "b"] };
+  const concept = { id: "example", startMs: 10, endMs: 20, title: text, suggested: text, prepared };
+  expect(ConceptSchema.safeParse(concept).success).toBe(true);
+  for (const invalid of [
+    { ...concept, endMs: 10 },
+    { ...concept, prepared: { ...prepared, question: { en: "Example" } } },
+    { ...concept, prepared: { ...prepared, steps: { en: ["One"], es: [] } } },
+    { ...concept, prepared: { ...prepared, sourceIds: [] } },
+    { ...concept, prepared: { ...prepared, sourceIds: ["a", "a"] } },
+    { ...concept, prepared: { ...prepared, sourceIds: Array.from({ length: 9 }, (_, i) => String(i)) } },
+  ]) expect(ConceptSchema.safeParse(invalid).success).toBe(false);
 });

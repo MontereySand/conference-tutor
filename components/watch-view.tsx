@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Source } from "@/lib/data-schema";
-import type { Lang, ProfileCard, Transcript, TurnKey } from "@/lib/types";
+import type { Lang, PreparedDemo, ProfileCard, Transcript, TurnKey } from "@/lib/types";
 import { htmlLang, t } from "@/lib/i18n";
 import { createSession, sessionReducer, type LessonRequest, type SessionAction } from "@/lib/session/reducer";
 import { YouTubePlayer, type PlayerHandle } from "@/components/player/youtube-player";
@@ -15,7 +15,7 @@ import type { AskResult, StageError } from "@/components/lesson/types";
 import { TimingOverlay } from "@/components/dev/timing-overlay";
 import { activeSentenceAt } from "@/lib/clock";
 import styles from "./watch-view.module.css";
-export function WatchView({source,transcript,english,cards,lang,profileId,initialMs,review,autoplay}:{source:Source;transcript:Transcript|null;english:Transcript;cards:ProfileCard[];lang:Lang;profileId:string;initialMs:number;review:boolean;autoplay:boolean}) {
+export function WatchView({source,transcript,english,card,demo,lang,profileId,initialMs,review,autoplay}:{source:Source;transcript:Transcript|null;english:Transcript;card:Omit<ProfileCard,"portrait">;demo:PreparedDemo|null;lang:Lang;profileId:string;initialMs:number;review:boolean;autoplay:boolean}) {
  const router=useRouter(),player=useRef<PlayerHandle>(null),surface=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null),controller=useRef<AbortController|null>(null),seeking=useRef(false);
  const [session,setSession]=useState(()=>createSession(source.id,profileId,lang)),current=useRef(session),[currentMs,setCurrentMs]=useState(initialMs),[seekPending,setSeekPending]=useState(false),[controlsTarget,setControlsTarget]=useState<HTMLDivElement|null>(null);
  const navigation=useRef<{sourceId:string;lang:Lang;profileId:string|null}|null>(null);
@@ -49,7 +49,7 @@ export function WatchView({source,transcript,english,cards,lang,profileId,initia
   const queued=current.current.queuedRequest;
   if(queued&&!seekPending&&transcript?.sourceId===source.id&&transcript.lang===lang)void send(queued);
  },[lang,profileId,source.id,transcript,session.queuedRequest,seekPending,send,update]);
- const text=t(session.lang),card=cards.find(card=>card.id===session.profileId);
+ const text=t(session.lang);
  function askQuestion(question:string){
   const state=current.current;if(state.pending||state.queuedRequest||!question.trim())return;
   void send({requestKind:"question",question,corrections:state.corrections},true);
@@ -84,7 +84,7 @@ export function WatchView({source,transcript,english,cards,lang,profileId,initia
  <main className={styles.canvas}>
   <div className={styles.video}><YouTubePlayer key={source.id} ref={player} videoId={source.youtubeId} initialMs={initialMs} durationMs={source.durationMs} lang={session.lang} autoplay={autoplay} controlsTarget={controlsTarget} onTime={setCurrentMs} onSeekPending={onSeekPending}/></div>
   <div className={styles.transcript}>{transcript?.lang===session.lang?<TranscriptPanel transcript={transcript} english={english} lang={session.lang} currentMs={currentMs} onSeek={seek} onDump={dump}/>:<section className="panel" role="status"><p>{lang!==session.lang?text.pending:text.translationUnavailable}</p></section>}</div>
-  <div className={styles.lesson}><LessonPane sourceId={source.id} currentMs={currentMs} result={session.result} lang={session.lang} card={card} corrections={session.corrections} pending={pending} error={session.error} askedAtMs={session.askedAtMs} onSeek={seek} onRetry={()=>{const request=current.current.lastRequest;if(request)void send(request);}} onCorrect={corrections=>{const question=current.current.resultQuestion;if(question&&!seeking.current&&Number.isFinite(player.current?.getTimeMs()))void send({requestKind:"regenerate",question,corrections});}} onQuestion={askQuestion}/></div>
+  <div className={styles.lesson}><LessonPane demo={demo} sourceId={source.id} currentMs={currentMs} result={session.result} lang={session.lang} card={card} corrections={session.corrections} pending={pending} error={session.error} askedAtMs={session.askedAtMs} onSeek={seek} onRetry={()=>{const request=current.current.lastRequest;if(request)void send(request);}} onCorrect={corrections=>{const question=current.current.resultQuestion;if(question&&!seeking.current&&Number.isFinite(player.current?.getTimeMs()))void send({requestKind:"regenerate",question,corrections});}} onQuestion={askQuestion}/></div>
   <div className={styles.dump}><AskBox lang={session.lang} question={session.question} pending={pending} disabled={seekPending} inputRef={input} onChange={question=>update({type:"question",question})} onSubmit={()=>askQuestion(current.current.question)} onCancel={abort}/></div>
  </main>
  {review&&<TimingOverlay sourceId={source.id} transcript={english} currentMs={currentMs} activeId={english.sentences[activeSentenceAt(english.sentences,currentMs)]?.id??null} lang={session.lang} disabled={seekPending} getTime={()=>player.current?.getTimeMs()??currentMs} onSaved={()=>router.refresh()}/>}

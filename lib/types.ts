@@ -6,6 +6,7 @@ export type Transcript = { sourceId: string; lang: Lang; durationMs: number; cha
 export type Chunk = { chunkId: string; sourceId: string; kind: "talk" | "reference"; title: string; url: string; chapter?: string; startMs?: number; endMs?: number; sentenceIds?: string[]; text: string; text_es?: string };
 export type ProfileCard = { id: string; name: string; role: string; portrait?: string; anchors: { id: string; text: string; source: "LinkedIn" | "Public web" | "Event report" | "Event page"; tags: string[] }[] };
 export type Concept = { id: string; startMs: number; endMs: number; title: Record<Lang, string>; suggested: Record<Lang, string> };
+export type PreparedDemo = { sourceId: string; startMs: number; endMs: number; title: Record<Lang, string>; question: Record<Lang, string>; explanation: Record<Lang, string>; steps: Record<Lang, string[]>; bridge?: { tag: string; text: Record<Lang, string>; limit: Record<Lang, string> }; sources: { chunkId: string; startMs: number; endMs: number }[] };
 export type TurnKey = { sourceId: string; profileId: string | null; lang: Lang; version: number; turnId: string };
 export type Corrections = { depth: "simple" | "standard" | "deep"; noAnalogy: boolean };
 export type AskRequestKind = "question" | "regenerate";
