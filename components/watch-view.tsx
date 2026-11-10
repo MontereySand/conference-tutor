@@ -3,22 +3,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Source } from "@/lib/data-schema";
-import type { Concept, Lang, ProfileCard, Transcript, TurnKey } from "@/lib/types";
+import type { Lang, PreparedDemo, ProfileCard, Transcript, TurnKey } from "@/lib/types";
 import { htmlLang, t } from "@/lib/i18n";
 import { createSession, sessionReducer, type LessonRequest, type SessionAction } from "@/lib/session/reducer";
 import { YouTubePlayer, type PlayerHandle } from "@/components/player/youtube-player";
 import { TranscriptPanel } from "@/components/transcript/transcript-panel";
-import { ProfilePicker } from "@/components/profile/profile-picker";
-import { ProfileArt } from "@/components/profile/profile-art";
 import { LanguagePicker } from "@/components/profile/language-picker";
 import { AskBox } from "@/components/lesson/ask-box";
 import { LessonPane } from "@/components/lesson/lesson-pane";
 import type { AskResult, StageError } from "@/components/lesson/types";
 import { TimingOverlay } from "@/components/dev/timing-overlay";
 import { activeSentenceAt } from "@/lib/clock";
-import { Button } from "@astryxdesign/core/Button";
 import styles from "./watch-view.module.css";
-export function WatchView({source,transcript,english,cards,concepts,lang,profileId,initialMs,review,autoplay}:{source:Source;transcript:Transcript|null;english:Transcript;cards:ProfileCard[];concepts:Concept[];lang:Lang;profileId:string|null;initialMs:number;review:boolean;autoplay:boolean}) {
+export function WatchView({source,transcript,english,card,demo,lang,profileId,initialMs,review,autoplay}:{source:Source;transcript:Transcript|null;english:Transcript;card:Omit<ProfileCard,"portrait">;demo:PreparedDemo|null;lang:Lang;profileId:string;initialMs:number;review:boolean;autoplay:boolean}) {
  const router=useRouter(),player=useRef<PlayerHandle>(null),surface=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null),controller=useRef<AbortController|null>(null),seeking=useRef(false);
  const [session,setSession]=useState(()=>createSession(source.id,profileId,lang)),current=useRef(session),[currentMs,setCurrentMs]=useState(initialMs),[seekPending,setSeekPending]=useState(false),[controlsTarget,setControlsTarget]=useState<HTMLDivElement|null>(null);
  const navigation=useRef<{sourceId:string;lang:Lang;profileId:string|null}|null>(null);
@@ -52,7 +49,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
   const queued=current.current.queuedRequest;
   if(queued&&!seekPending&&transcript?.sourceId===source.id&&transcript.lang===lang)void send(queued);
  },[lang,profileId,source.id,transcript,session.queuedRequest,seekPending,send,update]);
- const text=t(session.lang),card=cards.find(card=>card.id===session.profileId);
+ const text=t(session.lang);
  function askQuestion(question:string){
   const state=current.current;if(state.pending||state.queuedRequest||!question.trim())return;
   void send({requestKind:"question",question,corrections:state.corrections},true);
@@ -68,9 +65,7 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
   const url="/watch/"+source.id+"?"+params;
   if(languageChanged)router.replace(url,{scroll:false});else window.history.replaceState(null,"",url);
  }
- function returnTalk(){surface.current?.focus({preventScroll:true});}
  function seek(ms:number){player.current?.seekTo(ms);surface.current?.focus({preventScroll:true});}
- function explain(){if(seeking.current)return;const ms=player.current?.getTimeMs();if(ms===undefined||!Number.isFinite(ms))return;const concept=concepts.find(concept=>ms>=concept.startMs&&ms<concept.endMs);askQuestion(concept?.suggested[current.current.lang]??t(current.current.lang).explainMoment);}
  function dump(selection:string){
   const addition=selection.trim();if(!addition)return;
   const draft=current.current.question;
@@ -80,21 +75,19 @@ export function WatchView({source,transcript,english,cards,concepts,lang,profile
   if(dialog)dialog.addEventListener("close",focus,{once:true});else focus();
  }
  const pending=session.pending!==null||session.queuedRequest!==null;
- return <div ref={surface} tabIndex={0} className={styles.surface} lang={htmlLang[session.lang]} aria-label={text.watch} aria-keyshortcuts="Space / ArrowRight ArrowDown ArrowLeft ArrowUp PageDown PageUp" onKeyDown={event=>{
+ return <div ref={surface} tabIndex={0} className={styles.surface} lang={htmlLang[session.lang]} aria-label={text.watch} aria-keyshortcuts="Space /" onKeyDown={event=>{
   if(event.defaultPrevented||event.nativeEvent.isComposing||event.repeat||event.metaKey||event.ctrlKey||event.altKey||event.shiftKey||event.target!==event.currentTarget)return;
   if(event.key===" "){event.preventDefault();if(player.current?.state()===1)player.current.pause();else player.current?.play();}
   else if(event.key==="/"){event.preventDefault();input.current?.focus();}
-  else if(["ArrowRight","ArrowDown","PageDown"].includes(event.key)&&!seeking.current&&!current.current.pending&&!current.current.queuedRequest){event.preventDefault();explain();}
-  else if(["ArrowLeft","ArrowUp","PageUp"].includes(event.key)&&current.current.askedAtMs!==null){event.preventDefault();seek(current.current.askedAtMs);}
  }}>
- <header className={`${styles.header} theatre-darkbar`}><Link href={"/?lang="+session.lang+(session.profileId?"&profile="+encodeURIComponent(session.profileId):"")} className={styles.brand}>{text.brand}</Link><a className={styles.source} href={source.url} target="_blank" rel="noreferrer">{source.labels[session.lang].title} ↗</a><div className={styles.identity}><ProfileArt profileId={session.profileId} label={card?.name??text.general} className={styles.avatar}/><ProfilePicker cards={cards} profileId={session.profileId} lang={session.lang} onChange={id=>switchSelection(session.lang,id)}/><LanguagePicker lang={session.lang} onChange={value=>switchSelection(value,session.profileId)}/></div></header>
+ <header className={`${styles.header} theatre-darkbar`}><Link href={"/?lang="+session.lang+"&profile="+encodeURIComponent(profileId)} className={styles.brand}>DATABRICKS CONFERENCE TUTOR</Link><LanguagePicker lang={session.lang} onChange={value=>switchSelection(value,profileId)}/></header>
  <main className={styles.canvas}>
   <div className={styles.video}><YouTubePlayer key={source.id} ref={player} videoId={source.youtubeId} initialMs={initialMs} durationMs={source.durationMs} lang={session.lang} autoplay={autoplay} controlsTarget={controlsTarget} onTime={setCurrentMs} onSeekPending={onSeekPending}/></div>
-  <div className={styles.transcript}>{transcript?.lang===session.lang?<TranscriptPanel transcript={transcript} english={english} lang={session.lang} currentMs={currentMs} concepts={concepts} onSeek={seek} onConcept={askQuestion} onDump={dump}/>:<section className="panel" role="status"><p>{lang!==session.lang?text.pending:text.translationUnavailable}</p></section>}</div>
-  <div className={styles.lesson}><LessonPane result={session.result} lang={session.lang} card={card} corrections={session.corrections} pending={pending} error={session.error} askedAtMs={session.askedAtMs} onSeek={seek} onRetry={()=>{const request=current.current.lastRequest;if(request)void send(request);}} onCorrect={corrections=>{const question=current.current.resultQuestion;if(question&&!seeking.current&&Number.isFinite(player.current?.getTimeMs()))void send({requestKind:"regenerate",question,corrections});}} onQuestion={askQuestion}/></div>
-  <div className={styles.dump}><AskBox lang={session.lang} question={session.question} pending={pending} disabled={seekPending} inputRef={input} onChange={question=>update({type:"question",question})} onSubmit={()=>askQuestion(current.current.question)} onCancel={abort}/><Button variant="secondary" label={text.explainMoment} isDisabled={pending||seekPending} onClick={explain}/><p className={styles.note}>{text.nativeReview}</p><p className={styles.note}>{text.keyboard}</p></div>
+  <div className={styles.transcript}>{transcript?.lang===session.lang?<TranscriptPanel transcript={transcript} english={english} lang={session.lang} currentMs={currentMs} onSeek={seek} onDump={dump}/>:<section className="panel" role="status"><p>{lang!==session.lang?text.pending:text.translationUnavailable}</p></section>}</div>
+  <div className={styles.lesson}><LessonPane demo={demo} sourceId={source.id} currentMs={currentMs} result={session.result} lang={session.lang} card={card} corrections={session.corrections} pending={pending} error={session.error} askedAtMs={session.askedAtMs} onSeek={seek} onRetry={()=>{const request=current.current.lastRequest;if(request)void send(request);}} onCorrect={corrections=>{const question=current.current.resultQuestion;if(question&&!seeking.current&&Number.isFinite(player.current?.getTimeMs()))void send({requestKind:"regenerate",question,corrections});}} onQuestion={askQuestion}/></div>
+  <div className={styles.dump}><AskBox lang={session.lang} question={session.question} pending={pending} disabled={seekPending} inputRef={input} onChange={question=>update({type:"question",question})} onSubmit={()=>askQuestion(current.current.question)} onCancel={abort}/></div>
  </main>
  {review&&<TimingOverlay sourceId={source.id} transcript={english} currentMs={currentMs} activeId={english.sentences[activeSentenceAt(english.sentences,currentMs)]?.id??null} lang={session.lang} disabled={seekPending} getTime={()=>player.current?.getTimeMs()??currentMs} onSaved={()=>router.refresh()}/>}
- <footer className={`${styles.footer} theatre-darkbar`}><div ref={setControlsTarget} className={styles.transport}/><Button variant="secondary" size="sm" label={text.returnAsked} isDisabled={session.askedAtMs===null} onClick={()=>{if(current.current.askedAtMs!==null)seek(current.current.askedAtMs);}}/><Button variant="secondary" size="sm" label={text.returnTalk} onClick={returnTalk}/></footer>
+ <footer className={`${styles.footer} theatre-darkbar`}><div ref={setControlsTarget} className={styles.transport}/></footer>
  </div>;
 }

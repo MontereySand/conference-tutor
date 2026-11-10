@@ -34,6 +34,7 @@ export const es: Messages = {
   transcriptPrepared: "Definición preparada · basada en fuentes",
   transcriptSources: "Citas de fuentes",
   dumpTitle: "Apuntes",
+  dumpSend: "Enviar pregunta",
   dumpInstructions: "Escribe aquí tus ideas o una pregunta. No se envía nada hasta que elijas Explicar.",
   dumpPlaceholder: "¿En qué estás pensando?",
   checkUnderstanding: "Comprueba lo que has entendido",

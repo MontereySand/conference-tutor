@@ -13,8 +13,8 @@ const figures = [
   "M20 77c-2-17 8-25 19-19s19 12 24 0-7-20-15-15-5 18 5 23 22 2 28-9M22 26l7 8m13-14 4 8m26 54 8-4",
 ];
 
-export function ProfileArt({ profileId, label, className }: { profileId: string | null; label: string; className?: string }) {
-  const index = profileId === null ? 0 : Array.from(profileId).reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0, 0) % figures.length;
+export function ProfileArt({ profileId, label, className }: { profileId: string; label: string; className?: string }) {
+  const index = Array.from(profileId).reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0, 0) % figures.length;
   return <svg className={className} viewBox="0 0 100 110" width="100%" height="100%" role="img" aria-label={label} xmlns="http://www.w3.org/2000/svg">
     <path d={figures[index]} fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>;
